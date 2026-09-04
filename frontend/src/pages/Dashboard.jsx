@@ -49,6 +49,9 @@ export default function Dashboard({ operador }) {
   return (
     <div>
       <h1>Sala de monitoreo</h1>
+      <p style={{ color: '#64748b', marginTop: 0 }}>
+        Alertas de todos los edificios clientes, en un solo panel.
+      </p>
       <div className="cards">
         <div className="card bad">
           <h3>

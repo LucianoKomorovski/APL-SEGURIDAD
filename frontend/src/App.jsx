@@ -20,7 +20,7 @@ import Simulador from './pages/Simulador';
 
 const VISTAS = [
   { id: 'dashboard', label: 'Monitoreo', icon: LayoutDashboard },
-  { id: 'usuarios', label: 'Sujetos', icon: Users },
+  { id: 'usuarios', label: 'Clientes', icon: Users },
   { id: 'zonas', label: 'Zonas', icon: Map },
   { id: 'niveles', label: 'Niveles', icon: Layers },
   { id: 'historial', label: 'Auditoría', icon: History },

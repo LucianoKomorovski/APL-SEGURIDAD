@@ -63,7 +63,7 @@ export default function Usuarios() {
 
   return (
     <div>
-      <h1>Sujetos de acceso</h1>
+      <h1>Clientes y llaveros</h1>
       <div className="panel">
         <h2>
           <UserPlus size={18} /> Alta con credencial
@@ -107,6 +107,7 @@ export default function Usuarios() {
           <label>
             Edificio
             <select value={form.edificio} onChange={onChange('edificio')}>
+              <option value="">Ninguno (técnico, todos los sitios)</option>
               {edificios.map((ed) => (
                 <option key={ed.id} value={ed.id}>
                   {ed.nombre}
@@ -121,14 +122,15 @@ export default function Usuarios() {
       </div>
 
       <div className="panel">
-        <h2>Padron</h2>
+        <h2>Padrón de clientes</h2>
         <table>
           <thead>
             <tr>
               <th>Nombre</th>
               <th>DNI</th>
+              <th>Edificio</th>
               <th>Nivel</th>
-              <th>Credenciales</th>
+              <th>Llaveros</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -139,6 +141,7 @@ export default function Usuarios() {
                   {s.nombre} {s.apellido}
                 </td>
                 <td>{s.dni}</td>
+                <td>{s.edificio_nombre || 'Todos'}</td>
                 <td>{s.nivel_nombre || '—'}</td>
                 <td>
                   {(s.credenciales || []).map((c) => c.codigo_referencia).join(', ') || '—'}

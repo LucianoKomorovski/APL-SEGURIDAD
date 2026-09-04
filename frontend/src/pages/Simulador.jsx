@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { api, formatFecha } from '../api';
 
 const TAGS = [
-  ['TAG-OP-01', 'Operador'],
-  ['TAG-TEC-01', 'Técnico'],
+  ['TAG-PEL-01', 'Residente Pellegrini'],
+  ['TAG-OF-01', 'Empleada oficinas'],
+  ['TAG-ENC-01', 'Encargado Pellegrini'],
+  ['TAG-TEC-01', 'Técnico APL (todos)'],
   ['TAG-VIS-01', 'Visitante'],
-  ['TAG-ADM-01', 'Admin (Composite)'],
   ['TAG-BLOQ-01', 'Bloqueada'],
   ['TAG-VENC-01', 'Vencida'],
 ];
@@ -13,7 +14,7 @@ const TAGS = [
 export default function Simulador() {
   const [controladores, setControladores] = useState([]);
   const [ip, setIp] = useState('199.1.1.0');
-  const [codigo, setCodigo] = useState('TAG-ADM-01');
+  const [codigo, setCodigo] = useState('TAG-PEL-01');
   const [log, setLog] = useState(
     'Listo. Este tótem habla el mismo contrato HTTP que un ESP32 o una controladora real.\n',
   );
@@ -52,8 +53,8 @@ export default function Simulador() {
     <div>
       <h1>Tótem virtual</h1>
       <p>
-        Para la defensa no hace falta hardware industrial: el simulador usa el mismo endpoint que
-        usaría un lector RFID en el predio.
+        Cada lector pertenece a un edificio cliente. Probá un llavero de Pellegrini
+        en oficinas: tiene que denegar por edificio.
       </p>
       <div className="totem">
         <div className="panel">
@@ -63,7 +64,7 @@ export default function Simulador() {
             <select value={ip} onChange={(e) => setIp(e.target.value)}>
               {controladores.map((c) => (
                 <option key={c.id} value={c.direccion_ip}>
-                  {c.numero_serie} — {c.zona_nombre} ({c.direccion_ip})
+                  {c.edificio_nombre || 'Sin edificio'} — {c.zona_nombre} ({c.direccion_ip})
                 </option>
               ))}
             </select>

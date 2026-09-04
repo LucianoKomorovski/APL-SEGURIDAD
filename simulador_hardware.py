@@ -5,17 +5,19 @@ import time
 import requests
 
 URL_BASE = "http://127.0.0.1:8000/api"
-IP_HALL = "199.1.1.0"
-IP_MONITOREO = "10.0.0.20"
-IP_TALLER = "10.0.0.30"
+IP_PELLEGRINI = "199.1.1.0"
+IP_OFICINAS = "10.0.0.20"
+IP_COCHERA = "10.0.0.30"
+IP_DEPOSITO = "10.0.0.40"
 
 TAGS_DEMO = [
-    ("TAG-OP-01", "Operador — hall y monitoreo"),
-    ("TAG-TEC-01", "Técnico — hall y taller, no monitoreo"),
-    ("TAG-VIS-01", "Visitante — hall, lun-vie 08-18"),
-    ("TAG-ADM-01", "Admin — predio completo (Composite)"),
-    ("TAG-BLOQ-01", "Tarjeta bloqueada"),
-    ("TAG-VENC-01", "Tarjeta vencida"),
+    ("TAG-PEL-01", "Residente Consorcio Pellegrini"),
+    ("TAG-OF-01", "Empleada Oficinas Macrocentro"),
+    ("TAG-ENC-01", "Encargado Pellegrini (ingreso + cochera)"),
+    ("TAG-TEC-01", "Técnico APL — todos los edificios clientes"),
+    ("TAG-VIS-01", "Visitante Pellegrini, lun-vie 08-18"),
+    ("TAG-BLOQ-01", "Llavero bloqueado"),
+    ("TAG-VENC-01", "Llavero vencido"),
 ]
 
 
@@ -84,20 +86,25 @@ def menu_interactivo(ip_totem):
 
 
 def demo_automatica():
-    print("=== Demo automática del motor de reglas ===")
-    heartbeat(IP_HALL)
-    pasar_tarjeta("TAG-ADM-01", IP_HALL)
-    pasar_tarjeta("TAG-VIS-01", IP_MONITOREO)
-    pasar_tarjeta("TAG-TEC-01", IP_MONITOREO)
-    pasar_tarjeta("TAG-TEC-01", IP_TALLER)
-    pasar_tarjeta("TAG-BLOQ-01", IP_HALL)
-    emitir_evento("PUERTA_FORZADA", IP_HALL)
+    print("=== Demo multi-edificio ===")
+    heartbeat(IP_PELLEGRINI)
+    pasar_tarjeta("TAG-PEL-01", IP_PELLEGRINI)
+    pasar_tarjeta("TAG-PEL-01", IP_OFICINAS)
+    pasar_tarjeta("TAG-ENC-01", IP_COCHERA)
+    pasar_tarjeta("TAG-PEL-01", IP_COCHERA)
+    pasar_tarjeta("TAG-TEC-01", IP_DEPOSITO)
+    pasar_tarjeta("TAG-BLOQ-01", IP_PELLEGRINI)
+    emitir_evento("PUERTA_FORZADA", IP_PELLEGRINI)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Simulador de controladora SGCA-APL")
-    parser.add_argument("--ip", default=IP_HALL, help="IP del ControladorAcceso (default hall 199.1.1.0)")
-    parser.add_argument("--demo", action="store_true", help="Corre escenarios de zona, horario y alerta")
+    parser = argparse.ArgumentParser(description="Simulador de tótem SGCA-APL")
+    parser.add_argument(
+        "--ip",
+        default=IP_PELLEGRINI,
+        help="IP del ControladorAcceso (default ingreso Pellegrini 199.1.1.0)",
+    )
+    parser.add_argument("--demo", action="store_true", help="Corre escenarios multi-edificio")
     args = parser.parse_args()
     if args.demo:
         demo_automatica()

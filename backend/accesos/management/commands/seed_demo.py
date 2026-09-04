@@ -17,119 +17,140 @@ from accesos.models import (
 )
 
 
+def _edificio_con_ingreso(nombre, direccion, serie, ip, zona_raiz='Ingreso principal'):
+    edificio, _ = Edificio.objects.update_or_create(
+        nombre=nombre,
+        defaults={'direccion': direccion},
+    )
+    raiz, _ = ComponenteZona.objects.update_or_create(
+        nombre_zona=nombre,
+        edificio=edificio,
+        zona_padre=None,
+        defaults={'nivel_seguridad': 'Media'},
+    )
+    ingreso, _ = ComponenteZona.objects.update_or_create(
+        nombre_zona=zona_raiz,
+        edificio=edificio,
+        zona_padre=raiz,
+        defaults={'nivel_seguridad': 'Media'},
+    )
+    punto, _ = PuntoAcceso.objects.update_or_create(
+        descripcion=f'Tótem {nombre}',
+        defaults={'ubicacion_fisica': 'Entrada', 'zona': ingreso},
+    )
+    ControladorAcceso.objects.update_or_create(
+        numero_serie=serie,
+        defaults={
+            'direccion_ip': ip,
+            'estado_conexion': 'Desconectado',
+            'punto_acceso': punto,
+            'edificio': edificio,
+        },
+    )
+    return edificio, raiz, ingreso
+
+
 class Command(BaseCommand):
-    help = 'Carga un predio demo tipo APL Rosario para probar el motor de reglas.'
+    help = (
+        'Carga tres edificios clientes (consorcio, oficinas, depósito) '
+        'con llaveros RFID para probar el panel multi-edificio.'
+    )
 
     def handle(self, *args, **options):
-        edificio, _ = Edificio.objects.update_or_create(
-            nombre='Sede APL Rosario',
-            defaults={'direccion': 'Rosario, Santa Fe'},
+        # Datos viejos del demo "sede APL / taller técnico": eso no es el dominio.
+        Edificio.objects.filter(nombre='Sede APL Rosario').delete()
+        ComponenteZona.objects.filter(
+            nombre_zona__in=['Taller técnico', 'Sala de monitoreo', 'Predio APL', 'Hall de ingreso'],
+        ).delete()
+        NivelAcceso.objects.filter(
+            nombre_nivel__in=[
+                'Visitante',
+                'Operador de monitoreo',
+                'Técnico instalador',
+                'Administrador de predio',
+            ],
+        ).delete()
+        Credencial.objects.filter(
+            codigo_referencia__in=['TAG-OP-01', 'TAG-ADM-01', 'TAG-VIS-01'],
+        ).delete()
+
+        pellegrini, raiz_pel, ingreso_pel = _edificio_con_ingreso(
+            'Consorcio Pellegrini',
+            'Av. Pellegrini 1200, Rosario',
+            'PEL-ING-01',
+            '199.1.1.0',
+            'Ingreso peatonal',
+        )
+        oficinas, raiz_of, ingreso_of = _edificio_con_ingreso(
+            'Oficinas Macrocentro',
+            'San Lorenzo 800, Rosario',
+            'OF-ING-01',
+            '10.0.0.20',
+        )
+        deposito, raiz_dep, ingreso_dep = _edificio_con_ingreso(
+            'Depósito Fisherton',
+            'Av. de Circunvalación 4500, Rosario',
+            'DEP-ING-01',
+            '10.0.0.40',
         )
 
-        predio, _ = ComponenteZona.objects.update_or_create(
-            nombre_zona='Predio APL',
+        cochera, _ = ComponenteZona.objects.update_or_create(
+            nombre_zona='Cochera',
+            edificio=pellegrini,
+            zona_padre=raiz_pel,
+            defaults={'nivel_seguridad': 'Media'},
+        )
+        punto_cochera, _ = PuntoAcceso.objects.update_or_create(
+            descripcion='Barrera cochera Pellegrini',
+            defaults={'ubicacion_fisica': 'Subsuelo', 'zona': cochera},
+        )
+        ControladorAcceso.objects.update_or_create(
+            numero_serie='PEL-COC-01',
             defaults={
-                'nivel_seguridad': 'Baja',
-                'zona_padre': None,
-                'edificio': edificio,
+                'direccion_ip': '10.0.0.30',
+                'estado_conexion': 'Desconectado',
+                'punto_acceso': punto_cochera,
+                'edificio': pellegrini,
             },
         )
-        hall, _ = ComponenteZona.objects.update_or_create(
-            nombre_zona='Hall de ingreso',
+
+        residente, _ = NivelAcceso.objects.update_or_create(
+            nombre_nivel='Residente Pellegrini',
+            defaults={'descripcion': 'Solo ingreso peatonal de su consorcio.'},
+        )
+        residente.zonas.set([ingreso_pel])
+
+        encargado, _ = NivelAcceso.objects.update_or_create(
+            nombre_nivel='Encargado Pellegrini',
+            defaults={'descripcion': 'Todo el consorcio (ingreso y cochera).'},
+        )
+        encargado.zonas.set([raiz_pel])
+
+        empleado_of, _ = NivelAcceso.objects.update_or_create(
+            nombre_nivel='Empleado oficinas',
+            defaults={'descripcion': 'Ingreso del edificio de oficinas.'},
+        )
+        empleado_of.zonas.set([ingreso_of])
+
+        tecnico, _ = NivelAcceso.objects.update_or_create(
+            nombre_nivel='Técnico de servicio',
             defaults={
-                'nivel_seguridad': 'Media',
-                'zona_padre': predio,
-                'edificio': edificio,
+                'descripcion': 'Personal APL que da servicio en todos los edificios clientes.',
             },
         )
-        monitoreo, _ = ComponenteZona.objects.update_or_create(
-            nombre_zona='Sala de monitoreo',
-            defaults={
-                'nivel_seguridad': 'Alta',
-                'zona_padre': predio,
-                'edificio': edificio,
-            },
-        )
-        tecnica, _ = ComponenteZona.objects.update_or_create(
-            nombre_zona='Taller técnico',
-            defaults={
-                'nivel_seguridad': 'Media',
-                'zona_padre': predio,
-                'edificio': edificio,
-            },
-        )
+        tecnico.zonas.set([raiz_pel, raiz_of, raiz_dep])
 
         visitante, _ = NivelAcceso.objects.update_or_create(
-            nombre_nivel='Visitante',
-            defaults={'descripcion': 'Solo hall de ingreso en horario laboral.'},
+            nombre_nivel='Visitante Pellegrini',
+            defaults={'descripcion': 'Ingreso peatonal, lunes a viernes 08-18.'},
         )
-        visitante.zonas.set([hall])
-
-        operador_nivel, _ = NivelAcceso.objects.update_or_create(
-            nombre_nivel='Operador de monitoreo',
-            defaults={'descripcion': 'Hall y sala de monitoreo, 24/7.'},
-        )
-        operador_nivel.zonas.set([hall, monitoreo])
-
-        tecnico_nivel, _ = NivelAcceso.objects.update_or_create(
-            nombre_nivel='Técnico instalador',
-            defaults={'descripcion': 'Hall y taller. Sin sala de monitoreo.'},
-        )
-        tecnico_nivel.zonas.set([hall, tecnica])
-
-        admin_nivel, _ = NivelAcceso.objects.update_or_create(
-            nombre_nivel='Administrador de predio',
-            defaults={'descripcion': 'Acceso al predio completo (Composite).'},
-        )
-        admin_nivel.zonas.set([predio])
-
+        visitante.zonas.set([ingreso_pel])
         HorarioPermitido.objects.filter(nivel_acceso=visitante).delete()
         HorarioPermitido.objects.create(
             hora_inicio=time(8, 0),
             hora_fin=time(18, 0),
             dias_semana='0,1,2,3,4',
             nivel_acceso=visitante,
-        )
-
-        punto_hall, _ = PuntoAcceso.objects.update_or_create(
-            descripcion='Molinete hall',
-            defaults={'ubicacion_fisica': 'Ingreso principal', 'zona': hall},
-        )
-        punto_monitoreo, _ = PuntoAcceso.objects.update_or_create(
-            descripcion='Puerta sala de monitoreo',
-            defaults={'ubicacion_fisica': 'Interior hall', 'zona': monitoreo},
-        )
-        punto_taller, _ = PuntoAcceso.objects.update_or_create(
-            descripcion='Puerta taller',
-            defaults={'ubicacion_fisica': 'Fondo del predio', 'zona': tecnica},
-        )
-
-        ControladorAcceso.objects.update_or_create(
-            numero_serie='APL-HALL-01',
-            defaults={
-                'direccion_ip': '199.1.1.0',
-                'estado_conexion': 'Desconectado',
-                'punto_acceso': punto_hall,
-                'edificio': edificio,
-            },
-        )
-        ControladorAcceso.objects.update_or_create(
-            numero_serie='APL-MON-01',
-            defaults={
-                'direccion_ip': '10.0.0.20',
-                'estado_conexion': 'Desconectado',
-                'punto_acceso': punto_monitoreo,
-                'edificio': edificio,
-            },
-        )
-        ControladorAcceso.objects.update_or_create(
-            numero_serie='APL-TEC-01',
-            defaults={
-                'direccion_ip': '10.0.0.30',
-                'estado_conexion': 'Desconectado',
-                'punto_acceso': punto_taller,
-                'edificio': edificio,
-            },
         )
 
         operador, created_op = OperadorSistema.objects.update_or_create(
@@ -149,28 +170,28 @@ class Command(BaseCommand):
             operador.save(update_fields=['password_hash'])
 
         vencimiento = timezone.now().date() + timedelta(days=365)
-        personas = [
+        clientes = [
             {
                 'dni': 40111001,
                 'defaults': {
-                    'nombre': 'Marcos',
-                    'apellido': 'Operador',
-                    'email': 'marcos.op@apl-demo.local',
-                    'legajo_empleado': 'OP-01',
-                    'nivel_acceso': operador_nivel,
-                    'edificio': edificio,
+                    'nombre': 'María',
+                    'apellido': 'Gómez',
+                    'email': 'maria.gomez@pellegrini-demo.local',
+                    'legajo_empleado': 'PEL-01',
+                    'nivel_acceso': residente,
+                    'edificio': pellegrini,
                 },
-                'tag': 'TAG-OP-01',
+                'tag': 'TAG-PEL-01',
             },
             {
                 'dni': 40111002,
                 'defaults': {
                     'nombre': 'Sofía',
-                    'apellido': 'Técnica',
-                    'email': 'sofia.tec@apl-demo.local',
+                    'apellido': 'Ruiz',
+                    'email': 'sofia.ruiz@apl-demo.local',
                     'legajo_empleado': 'TEC-01',
-                    'nivel_acceso': tecnico_nivel,
-                    'edificio': edificio,
+                    'nivel_acceso': tecnico,
+                    'edificio': None,
                 },
                 'tag': 'TAG-TEC-01',
             },
@@ -179,28 +200,40 @@ class Command(BaseCommand):
                 'defaults': {
                     'nombre': 'Pedro',
                     'apellido': 'Visitante',
-                    'email': 'pedro.vis@apl-demo.local',
+                    'email': 'pedro.vis@pellegrini-demo.local',
                     'legajo_empleado': 'VIS-01',
                     'nivel_acceso': visitante,
-                    'edificio': edificio,
+                    'edificio': pellegrini,
                 },
                 'tag': 'TAG-VIS-01',
             },
             {
                 'dni': 40111004,
                 'defaults': {
-                    'nombre': 'Ana',
-                    'apellido': 'Administración',
-                    'email': 'ana.adm@apl-demo.local',
-                    'legajo_empleado': 'ADM-01',
-                    'nivel_acceso': admin_nivel,
-                    'edificio': edificio,
+                    'nombre': 'Carlos',
+                    'apellido': 'Encargado',
+                    'email': 'carlos.enc@pellegrini-demo.local',
+                    'legajo_empleado': 'ENC-01',
+                    'nivel_acceso': encargado,
+                    'edificio': pellegrini,
                 },
-                'tag': 'TAG-ADM-01',
+                'tag': 'TAG-ENC-01',
+            },
+            {
+                'dni': 40111007,
+                'defaults': {
+                    'nombre': 'Laura',
+                    'apellido': 'Benítez',
+                    'email': 'laura.benitez@oficinas-demo.local',
+                    'legajo_empleado': 'OF-01',
+                    'nivel_acceso': empleado_of,
+                    'edificio': oficinas,
+                },
+                'tag': 'TAG-OF-01',
             },
         ]
 
-        for item in personas:
+        for item in clientes:
             sujeto, _ = SujetoAcceso.objects.update_or_create(
                 dni=item['dni'],
                 defaults=item['defaults'],
@@ -220,10 +253,10 @@ class Command(BaseCommand):
             defaults={
                 'nombre': 'Luis',
                 'apellido': 'Bloqueado',
-                'email': 'luis.bloq@apl-demo.local',
+                'email': 'luis.bloq@pellegrini-demo.local',
                 'legajo_empleado': 'BLOQ-01',
-                'nivel_acceso': visitante,
-                'edificio': edificio,
+                'nivel_acceso': residente,
+                'edificio': pellegrini,
             },
         )
         Credencial.objects.update_or_create(
@@ -241,10 +274,10 @@ class Command(BaseCommand):
             defaults={
                 'nombre': 'Clara',
                 'apellido': 'Vencida',
-                'email': 'clara.ven@apl-demo.local',
+                'email': 'clara.ven@pellegrini-demo.local',
                 'legajo_empleado': 'VEN-01',
-                'nivel_acceso': visitante,
-                'edificio': edificio,
+                'nivel_acceso': residente,
+                'edificio': pellegrini,
             },
         )
         Credencial.objects.update_or_create(
@@ -258,7 +291,9 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS(
-            'Demo lista. Panel: usuario operador / apl2026. '
-            'Tags: TAG-OP-01, TAG-TEC-01, TAG-VIS-01, TAG-ADM-01, TAG-BLOQ-01, TAG-VENC-01. '
-            'Tótem hall: 199.1.1.0 — monitoreo: 10.0.0.20 — taller: 10.0.0.30'
+            'Demo multi-edificio lista. Panel: operador / apl2026. '
+            'Pellegrini 199.1.1.0 (ingreso) y 10.0.0.30 (cochera) | '
+            'Oficinas 10.0.0.20 | Depósito 10.0.0.40. '
+            'Llaves: TAG-PEL-01, TAG-OF-01, TAG-ENC-01, TAG-TEC-01, TAG-VIS-01, '
+            'TAG-BLOQ-01, TAG-VENC-01.'
         ))

@@ -76,7 +76,7 @@ export default function Zonas() {
 
   return (
     <div>
-      <h1>Zonas del predio</h1>
+      <h1>Zonas por edificio</h1>
       <div className="panel">
         <h2>Árbol Composite</h2>
         <ul className="tree">
