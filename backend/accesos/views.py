@@ -1,14 +1,49 @@
-from rest_framework import viewsets
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.db import transaction, IntegrityError
-from django.utils import timezone
 from datetime import timedelta
-from .models import SujetoAcceso, PuntoAcceso, RegistroAcceso, AlertaSeguridad, Credencial, ControladorAcceso, Edificio
-from .serializers import SujetoAccesoSerializer, PuntoAccesoSerializer, RegistroAccesoSerializer, AlertaSeguridadSerializer, EdificioSerializer
+
+from django.contrib.auth.hashers import check_password
+from django.db import IntegrityError, transaction
+from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.response import Response
+
+from .models import (
+    AlertaSeguridad,
+    ComponenteZona,
+    ControladorAcceso,
+    Credencial,
+    Edificio,
+    HorarioPermitido,
+    NivelAcceso,
+    OperadorSistema,
+    PuntoAcceso,
+    RegistroAcceso,
+    ResolucionAlerta,
+    SujetoAcceso,
+)
+from .motor_reglas import MotorValidacionAcceso
+from .serializers import (
+    AlertaSeguridadSerializer,
+    ComponenteZonaSerializer,
+    ControladorAccesoSerializer,
+    CredencialSerializer,
+    EdificioSerializer,
+    HorarioPermitidoSerializer,
+    NivelAccesoSerializer,
+    PuntoAccesoSerializer,
+    RegistroAccesoSerializer,
+    SujetoAccesoSerializer,
+)
+
+
+def _marcar_controlador_en_linea(dispositivo):
+    dispositivo.estado_conexion = 'En linea'
+    dispositivo.fecha_ultimo_ping = timezone.now()
+    dispositivo.save(update_fields=['estado_conexion', 'fecha_ultimo_ping'])
+
 
 class SujetoAccesoViewSet(viewsets.ModelViewSet):
-    queryset = SujetoAcceso.objects.all()
+    queryset = SujetoAcceso.objects.select_related('nivel_acceso', 'edificio').all()
     serializer_class = SujetoAccesoSerializer
 
     def create(self, request, *args, **kwargs):
@@ -18,8 +53,10 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
         email = request.data.get('email')
         codigo_referencia = request.data.get('codigo_referencia')
         edificio_id = request.data.get('edificio')
+        nivel_id = request.data.get('nivel_acceso')
+        telefono = request.data.get('telefono') or ''
+        legajo = request.data.get('legajo_empleado') or None
 
-        # VALIDACION MINIMA DE CAMPOS OBLIGATORIOS:
         if not all([nombre, apellido, dni, email]):
             return Response(
                 {"error": "Faltan datos obligatorios (nombre, apellido, dni, email)."},
@@ -27,10 +64,7 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            # transaction.atomic: si falla la credencial, se deshace TODO
-            # (no queda un usuario a medias sin su credencial)
             with transaction.atomic():
-                # 1. CREAMOS EL USUARIO (SujetoAcceso hereda de Persona):
                 edificio_obj = None
                 if edificio_id:
                     try:
@@ -38,25 +72,33 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
                     except Edificio.DoesNotExist:
                         return Response({"error": "Edificio no encontrado"}, status=400)
 
+                nivel_obj = None
+                if nivel_id:
+                    try:
+                        nivel_obj = NivelAcceso.objects.get(pk=nivel_id)
+                    except NivelAcceso.DoesNotExist:
+                        return Response({"error": "Nivel de acceso no encontrado"}, status=400)
+
                 sujeto = SujetoAcceso.objects.create(
                     nombre=nombre,
                     apellido=apellido,
                     dni=dni,
                     email=email,
+                    telefono=telefono,
+                    legajo_empleado=legajo,
                     edificio=edificio_obj,
+                    nivel_acceso=nivel_obj,
                 )
 
-                # 2. SI VINO UN CODIGO RFID, CREAMOS LA CREDENCIAL VINCULADA:
                 if codigo_referencia:
                     Credencial.objects.create(
                         codigo_referencia=codigo_referencia,
-                        tipo='RFID',
+                        tipo=request.data.get('tipo_credencial') or 'RFID',
                         fecha_vencimiento=timezone.now().date() + timedelta(days=365),
                         estado='Activa',
-                        persona=sujeto,  # FK a Persona (un SujetoAcceso ES una Persona)
+                        persona=sujeto,
                     )
         except IntegrityError as e:
-            # Por ej. dni, email o codigo_referencia duplicados (son campos unicos)
             return Response(
                 {"error": f"Datos duplicados o invalidos: {str(e)}"},
                 status=400,
@@ -65,82 +107,193 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(sujeto)
         return Response(serializer.data, status=201)
 
+
 class PuntoAccesoViewSet(viewsets.ModelViewSet):
-    queryset = PuntoAcceso.objects.all()
+    queryset = PuntoAcceso.objects.select_related('zona').all()
     serializer_class = PuntoAccesoSerializer
 
+
 class RegistroAccesoViewSet(viewsets.ModelViewSet):
-    queryset = RegistroAcceso.objects.all()
+    queryset = RegistroAcceso.objects.select_related(
+        'credencial__persona',
+        'dispositivo__punto_acceso__zona',
+    ).all()
     serializer_class = RegistroAccesoSerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        resultado = self.request.query_params.get('resultado')
+        if resultado:
+            qs = qs.filter(resultado=resultado)
+        return qs
+
+
 class AlertaSeguridadViewSet(viewsets.ModelViewSet):
-    queryset = AlertaSeguridad.objects.all()
+    queryset = AlertaSeguridad.objects.select_related(
+        'dispositivo__punto_acceso__zona',
+        'resolucion',
+    ).all()
     serializer_class = AlertaSeguridadSerializer
+
+    @action(detail=True, methods=['post'])
+    def resolver(self, request, pk=None):
+        alerta = self.get_object()
+        if alerta.estado_atencion == 'Resuelta':
+            return Response(self.get_serializer(alerta).data)
+
+        observaciones = request.data.get('observaciones') or 'Resuelta desde el panel operativo.'
+        operador = None
+        operador_id = request.data.get('operador')
+        if operador_id:
+            operador = OperadorSistema.objects.filter(pk=operador_id).first()
+
+        with transaction.atomic():
+            alerta.estado_atencion = 'Resuelta'
+            alerta.save(update_fields=['estado_atencion'])
+            ResolucionAlerta.objects.update_or_create(
+                alerta=alerta,
+                defaults={
+                    'observaciones': observaciones,
+                    'operador': operador,
+                },
+            )
+
+        alerta.refresh_from_db()
+        return Response(self.get_serializer(alerta).data)
+
 
 class EdificioViewSet(viewsets.ModelViewSet):
     queryset = Edificio.objects.all()
     serializer_class = EdificioSerializer
 
 
+class NivelAccesoViewSet(viewsets.ModelViewSet):
+    queryset = NivelAcceso.objects.prefetch_related('zonas', 'horarios').all()
+    serializer_class = NivelAccesoSerializer
+
+
+class ComponenteZonaViewSet(viewsets.ModelViewSet):
+    queryset = ComponenteZona.objects.select_related('edificio', 'zona_padre').all()
+    serializer_class = ComponenteZonaSerializer
+
+
+class HorarioPermitidoViewSet(viewsets.ModelViewSet):
+    queryset = HorarioPermitido.objects.select_related('nivel_acceso').all()
+    serializer_class = HorarioPermitidoSerializer
+
+
+class ControladorAccesoViewSet(viewsets.ModelViewSet):
+    queryset = ControladorAcceso.objects.select_related(
+        'punto_acceso__zona',
+        'edificio',
+    ).all()
+    serializer_class = ControladorAccesoSerializer
+
+
+class CredencialViewSet(viewsets.ModelViewSet):
+    queryset = Credencial.objects.select_related('persona').all()
+    serializer_class = CredencialSerializer
+
+
+@api_view(['POST'])
+def login_operador(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    operador = OperadorSistema.objects.filter(username=username).first()
+    if not operador or not check_password(password, operador.password_hash):
+        return Response({'error': 'Usuario o contraseña inválidos'}, status=401)
+    return Response({
+        'id': operador.pk,
+        'username': operador.username,
+        'nombre': f'{operador.nombre} {operador.apellido}',
+        'turno_asignado': operador.turno_asignado,
+    })
+
 
 @api_view(['POST'])
 def procesar_lectura_totem(request):
     codigo = request.data.get('codigo_rfid')
     ip_totem = request.data.get('ip_totem')
+    motor = MotorValidacionAcceso()
 
     try:
-
-        # 1. BUSCAMOS DE QUE DISP. VIENE LA LECTURA:
-        dispositivo = ControladorAcceso.objects.filter(direccion_ip = ip_totem).first()
-
-        if not dispositivo:
-            return Response({"dispositivo no encontrado en el sistema"}, status=404)
-        
-        #2. BUSCAMOS CREDENCIAL QUE PASO POR EL LECTOR:
-        credencial = Credencial.objects.filter(codigo_referencia = codigo).first()
-
-        # if not credencial:
-           # return Response({"error en credencial, no encontrada"}, status=404)
-
-        #3. Logica de Negocio
-        if credencial and credencial.estado == 'Activa':
-            #ESTA TOD0 EN ORDEN, REGISTRAMOS ACCESO Y ABRIMOS PUERTA:
-            RegistroAcceso.objects.create(
-                resultado='concedido',
-                dispositivo=dispositivo,
-                credencial=credencial
-            )
-            return Response({"status": "ok", "accion": "ABRIR_PUERTA" })
-        else:
-            #TARJETA FALSA, VENCIDA O BLOQUEADA:
-            motivo = "tarjeta inexistente" if not credencial else f"Tarjeta {credencial.estado}"
-
-            #Esa f corresponde a un f-string (literal de cadena formateada), una característica de Python 3.6+ que permite insertar variables directamente dentro de un texto.
-
-            AlertaSeguridad.objects.create(
-                tipo_alerta=f'acceso denegado: {motivo}',
-                nivel_gravedad='Alta',
-                estado_atencion='Pendiente',
-                dispositivo=dispositivo
-            )
-
-
-            RegistroAcceso.objects.create(
-                resultado='rechazado',
-                motivo_rechazo=motivo,
-                dispositivo=dispositivo,
-                credencial=credencial if credencial else None #PERMITIMOS QUE LA CREDENCIAL SEA NULA
-            )
-
-
-            return Response({"status" : "ERROR" , "accion" : "BLOQUEAR_PUERTA"}, status=403)
-    
+        resultado = motor.evaluar(codigo, ip_totem)
     except Exception as e:
-    #SI LA BASE DE DATOS TIRA CUALQUIER OTRO ERROR, LO ATRAPAMOS Y CONVERTIMOS EN JSON:
-        return Response({"status" : "critical" , "accion" : "error_interno" , "error": str(e)}, status=500)
-    
-            
+        return Response(
+            {'status': 'critical', 'accion': 'error_interno', 'error': str(e)},
+            status=500,
+        )
 
-    
+    if resultado.dispositivo is None:
+        return Response({'error': 'dispositivo no encontrado en el sistema'}, status=404)
+
+    _marcar_controlador_en_linea(resultado.dispositivo)
+
+    RegistroAcceso.objects.create(
+        resultado='concedido' if resultado.concedido else 'rechazado',
+        motivo_rechazo=None if resultado.concedido else resultado.motivo,
+        dispositivo=resultado.dispositivo,
+        credencial=resultado.credencial,
+    )
+
+    if resultado.concedido:
+        return Response({'status': 'ok', 'accion': resultado.accion, 'motivo': None})
+
+    AlertaSeguridad.objects.create(
+        tipo_alerta=resultado.tipo_alerta,
+        nivel_gravedad=resultado.nivel_gravedad,
+        estado_atencion='Pendiente',
+        dispositivo=resultado.dispositivo,
+    )
+    return Response(
+        {'status': 'ERROR', 'accion': resultado.accion, 'motivo': resultado.motivo},
+        status=403,
+    )
 
 
+@api_view(['POST'])
+def procesar_evento_hardware(request):
+    ip_totem = request.data.get('ip_totem')
+    tipo = (request.data.get('tipo') or '').upper()
+    dispositivo = ControladorAcceso.objects.filter(direccion_ip=ip_totem).first()
+    if not dispositivo:
+        return Response({'error': 'dispositivo no encontrado en el sistema'}, status=404)
+
+    eventos = {
+        'PUERTA_FORZADA': ('puerta forzada', 'Critica', 'En linea'),
+        'DESCONEXION': ('controlador desconectado', 'Alta', 'Desconectado'),
+        'RECONEXION': ('controlador reconectado', 'Baja', 'En linea'),
+    }
+    if tipo not in eventos:
+        return Response({'error': 'tipo de evento no soportado'}, status=400)
+
+    tipo_alerta, gravedad, estado = eventos[tipo]
+    dispositivo.estado_conexion = estado
+    dispositivo.fecha_ultimo_ping = timezone.now()
+    dispositivo.save(update_fields=['estado_conexion', 'fecha_ultimo_ping'])
+
+    alerta = None
+    if tipo != 'RECONEXION':
+        alerta = AlertaSeguridad.objects.create(
+            tipo_alerta=tipo_alerta,
+            nivel_gravedad=gravedad,
+            estado_atencion='Pendiente',
+            dispositivo=dispositivo,
+        )
+
+    return Response({
+        'status': 'ok',
+        'tipo': tipo,
+        'alerta_id': alerta.id if alerta else None,
+        'estado_conexion': dispositivo.estado_conexion,
+    })
+
+
+@api_view(['POST'])
+def heartbeat_totem(request):
+    ip_totem = request.data.get('ip_totem')
+    dispositivo = ControladorAcceso.objects.filter(direccion_ip=ip_totem).first()
+    if not dispositivo:
+        return Response({'error': 'dispositivo no encontrado en el sistema'}, status=404)
+    _marcar_controlador_en_linea(dispositivo)
+    return Response({'status': 'ok', 'estado_conexion': dispositivo.estado_conexion})
