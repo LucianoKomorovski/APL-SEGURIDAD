@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle, Radio } from 'lucide-react';
+import { LogIn, LogOut, Ban, Radio } from 'lucide-react';
 import { api, formatFecha } from '../api';
 
 export default function Dashboard({ operador }) {
@@ -16,7 +16,7 @@ export default function Dashboard({ operador }) {
         api.get('/controladores/'),
       ]);
       setAlertas(Array.isArray(a) ? a : []);
-      setRegistros(Array.isArray(r) ? r.slice(0, 8) : []);
+      setRegistros(Array.isArray(r) ? r.slice(0, 25) : []);
       setControladores(Array.isArray(c) ? c : []);
     } catch (err) {
       console.error(err);
@@ -25,12 +25,18 @@ export default function Dashboard({ operador }) {
 
   useEffect(() => {
     cargar();
-    const id = setInterval(cargar, 3000);
+    const id = setInterval(cargar, 2500);
     return () => clearInterval(id);
   }, []);
 
   const pendientes = alertas.filter((a) => a.estado_atencion !== 'Resuelta').length;
-  const resueltas = alertas.filter((a) => a.estado_atencion === 'Resuelta').length;
+  const entradas = registros.filter(
+    (r) => r.sentido === 'Entrada' && r.resultado === 'concedido',
+  ).length;
+  const salidas = registros.filter(
+    (r) => r.sentido === 'Salida' && r.resultado === 'concedido',
+  ).length;
+  const denegados = registros.filter((r) => r.resultado === 'rechazado').length;
   const enLinea = controladores.filter((c) => c.en_linea).length;
 
   const resolver = async (id) => {
@@ -48,26 +54,33 @@ export default function Dashboard({ operador }) {
 
   return (
     <div>
-      <h1>Sala de monitoreo</h1>
+      <h1>Entradas y salidas en vivo</h1>
       <p style={{ color: '#64748b', marginTop: 0 }}>
-        Alertas de todos los edificios clientes, en un solo panel.
+        Operador APL: pases de todos los edificios. El tótem con cámara y el guardia
+        están en la puerta; acá se ve el movimiento.
       </p>
       <div className="cards">
-        <div className="card bad">
-          <h3>
-            <AlertTriangle size={16} color="#ef4444" /> Alertas abiertas
-          </h3>
-          <p>{pendientes}</p>
-        </div>
         <div className="card ok">
           <h3>
-            <CheckCircle size={16} color="#22c55e" /> Resueltas
+            <LogIn size={16} color="#22c55e" /> Entradas
           </h3>
-          <p>{resueltas}</p>
+          <p>{entradas}</p>
         </div>
         <div className="card info">
           <h3>
-            <Radio size={16} color="#3b82f6" /> Controladores en línea
+            <LogOut size={16} color="#3b82f6" /> Salidas
+          </h3>
+          <p>{salidas}</p>
+        </div>
+        <div className="card bad">
+          <h3>
+            <Ban size={16} color="#ef4444" /> Denegados
+          </h3>
+          <p>{denegados}</p>
+        </div>
+        <div className="card warn">
+          <h3>
+            <Radio size={16} color="#f59e0b" /> Tótems en línea
           </h3>
           <p>
             {enLinea}/{controladores.length}
@@ -76,13 +89,65 @@ export default function Dashboard({ operador }) {
       </div>
 
       <div className="panel">
-        <h2>Alertas de seguridad</h2>
+        <h2>Últimos movimientos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Sentido</th>
+              <th>Cliente</th>
+              <th>Llave</th>
+              <th>Edificio</th>
+              <th>Tótem</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {registros.length === 0 ? (
+              <tr>
+                <td colSpan="7">Todavía no hay pases. Usá el tótem virtual para generarlos.</td>
+              </tr>
+            ) : (
+              registros.map((reg) => (
+                <tr key={reg.id}>
+                  <td>{formatFecha(reg.fecha_hora)}</td>
+                  <td>
+                    <span
+                      className={
+                        reg.sentido === 'Salida' ? 'badge badge-muted' : 'badge badge-ok'
+                      }
+                    >
+                      {reg.sentido}
+                    </span>
+                  </td>
+                  <td>{reg.persona_nombre || '—'}</td>
+                  <td>{reg.codigo_rfid || '—'}</td>
+                  <td>{reg.edificio_nombre || '—'}</td>
+                  <td>{reg.zona_nombre || '—'}</td>
+                  <td>
+                    <span
+                      className={
+                        reg.resultado === 'concedido' ? 'badge badge-ok' : 'badge badge-bad'
+                      }
+                    >
+                      {reg.resultado === 'concedido' ? 'Abrió' : 'Denegó'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="panel">
+        <h2>Incidentes ({pendientes} abiertos)</h2>
         <label>
           Observación al resolver
           <input
             value={observaciones}
             onChange={(e) => setObservaciones(e.target.value)}
-            placeholder="Ej: se verificó la puerta, sin novedad"
+            placeholder="Ej: el guardia del tótem confirmó identidad"
           />
         </label>
         <table>
@@ -90,7 +155,7 @@ export default function Dashboard({ operador }) {
             <tr>
               <th>ID</th>
               <th>Tipo</th>
-              <th>Zona</th>
+              <th>Lugar</th>
               <th>Gravedad</th>
               <th>Estado</th>
               <th></th>
@@ -99,7 +164,7 @@ export default function Dashboard({ operador }) {
           <tbody>
             {alertas.length === 0 ? (
               <tr>
-                <td colSpan="6">No hay alertas.</td>
+                <td colSpan="6">Sin incidentes.</td>
               </tr>
             ) : (
               alertas.map((alerta) => (
@@ -131,40 +196,6 @@ export default function Dashboard({ operador }) {
                 </tr>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="panel">
-        <h2>Últimos pases</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Hora</th>
-              <th>Persona</th>
-              <th>Tag</th>
-              <th>Zona</th>
-              <th>Resultado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {registros.map((reg) => (
-              <tr key={reg.id}>
-                <td>{formatFecha(reg.fecha_hora)}</td>
-                <td>{reg.persona_nombre || '—'}</td>
-                <td>{reg.codigo_rfid || '—'}</td>
-                <td>{reg.zona_nombre || '—'}</td>
-                <td>
-                  <span
-                    className={
-                      reg.resultado === 'concedido' ? 'badge badge-ok' : 'badge badge-bad'
-                    }
-                  >
-                    {reg.resultado}
-                  </span>
-                </td>
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>

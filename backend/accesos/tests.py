@@ -25,11 +25,14 @@ from accesos.motor_reglas import MotorValidacionAcceso, zona_esta_permitida
 TZ = ZoneInfo('America/Argentina/Buenos_Aires')
 
 
-def _punto_y_controlador(zona, edificio, descripcion, ip, serie):
+def _punto_y_controlador(zona, edificio, descripcion, ip, serie, sentido='Entrada'):
     punto = PuntoAcceso.objects.create(
         descripcion=descripcion,
         ubicacion_fisica=descripcion,
         zona=zona,
+        sentido=sentido,
+        tipo='Totem',
+        tiene_camara=True,
     )
     return ControladorAcceso.objects.create(
         direccion_ip=ip,
@@ -84,10 +87,13 @@ class MotorReglasTests(TestCase):
         self.nivel_oficinas.zonas.add(self.ingreso_of)
 
         self.ctrl_ingreso = _punto_y_controlador(
-            self.ingreso, self.pellegrini, 'Tótem ingreso', '199.1.1.0', 'PEL-ING-01',
+            self.ingreso, self.pellegrini, 'Tótem ingreso', '199.1.1.0', 'PEL-ING-01', 'Entrada',
+        )
+        self.ctrl_salida = _punto_y_controlador(
+            self.ingreso, self.pellegrini, 'Tótem salida', '10.0.0.31', 'PEL-SAL-01', 'Salida',
         )
         self.ctrl_cochera = _punto_y_controlador(
-            self.cochera, self.pellegrini, 'Barrera cochera', '10.0.0.30', 'PEL-COC-01',
+            self.cochera, self.pellegrini, 'Barrera cochera', '10.0.0.30', 'PEL-COC-01', 'Entrada',
         )
         self.ctrl_oficinas = _punto_y_controlador(
             self.ingreso_of, self.oficinas, 'Tótem oficinas', '10.0.0.20', 'OF-ING-01',
@@ -223,6 +229,18 @@ class TotemApiTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(respuesta.data['accion'], 'ABRIR_PUERTA')
         self.assertEqual(RegistroAcceso.objects.filter(resultado='concedido').count(), 1)
+        movimiento = RegistroAcceso.objects.get()
+        self.assertEqual(movimiento.sentido, 'Entrada')
+
+    def test_lectura_de_salida(self):
+        respuesta = self.client.post(
+            '/api/totem/lectura/',
+            {'codigo_rfid': 'TAG-ENC', 'ip_totem': '10.0.0.31'},
+            format='json',
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data['sentido'], 'Salida')
+        self.assertEqual(RegistroAcceso.objects.get().sentido, 'Salida')
 
     def test_lectura_en_edificio_ajeno_genera_alerta(self):
         respuesta = self.client.post(
@@ -275,3 +293,29 @@ class TotemApiTests(TestCase):
             format='json',
         )
         self.assertEqual(fail.status_code, 401)
+
+    def test_abm_llave_bloquear_cambiar_codigo_y_borrar_cliente(self):
+        sujeto_id = self.residente.pk
+        llave_id = self.tag_res.pk
+        cambio = self.client.patch(
+            f'/api/sujetos/{sujeto_id}/',
+            {
+                'codigo_referencia': 'TAG-PEL-NUEVO',
+                'estado_llave': 'Bloqueada',
+                'edificio': self.pellegrini.pk,
+                'nivel_acceso': self.nivel_residente.pk,
+            },
+            format='json',
+        )
+        self.assertEqual(cambio.status_code, 200)
+        self.tag_res.refresh_from_db()
+        self.assertEqual(self.tag_res.codigo_referencia, 'TAG-PEL-NUEVO')
+        self.assertEqual(self.tag_res.estado, 'Bloqueada')
+
+        baja_llave = self.client.delete(f'/api/credenciales/{llave_id}/')
+        self.assertEqual(baja_llave.status_code, 204)
+        self.assertFalse(Credencial.objects.filter(pk=llave_id).exists())
+
+        baja_cliente = self.client.delete(f'/api/sujetos/{sujeto_id}/')
+        self.assertEqual(baja_cliente.status_code, 204)
+        self.assertFalse(SujetoAcceso.objects.filter(pk=sujeto_id).exists())

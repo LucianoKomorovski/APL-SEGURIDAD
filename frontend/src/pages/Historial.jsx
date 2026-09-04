@@ -17,7 +17,7 @@ export default function Historial() {
 
   return (
     <div>
-      <h1>Auditoría de pases</h1>
+      <h1>Auditoría de entradas y salidas</h1>
       <div className="panel">
         <div className="form-grid">
           <label>
@@ -39,10 +39,11 @@ export default function Historial() {
           <thead>
             <tr>
               <th>Fecha</th>
+              <th>Sentido</th>
               <th>Persona</th>
-              <th>Tag</th>
-              <th>Zona</th>
-              <th>IP</th>
+              <th>Llave</th>
+              <th>Edificio</th>
+              <th>Tótem</th>
               <th>Resultado</th>
               <th>Motivo</th>
             </tr>
@@ -51,10 +52,11 @@ export default function Historial() {
             {registros.map((r) => (
               <tr key={r.id}>
                 <td>{formatFecha(r.fecha_hora)}</td>
+                <td>{r.sentido}</td>
                 <td>{r.persona_nombre || '—'}</td>
                 <td>{r.codigo_rfid || '—'}</td>
+                <td>{r.edificio_nombre || '—'}</td>
                 <td>{r.zona_nombre || '—'}</td>
-                <td>{r.dispositivo_ip || '—'}</td>
                 <td>
                   <span
                     className={

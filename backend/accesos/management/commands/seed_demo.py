@@ -17,6 +17,29 @@ from accesos.models import (
 )
 
 
+def _totem(edificio, zona, descripcion, serie, ip, sentido, tipo='Totem', camara=True, ubicacion='Puerta'):
+    punto, _ = PuntoAcceso.objects.update_or_create(
+        descripcion=descripcion,
+        defaults={
+            'ubicacion_fisica': ubicacion,
+            'zona': zona,
+            'sentido': sentido,
+            'tipo': tipo,
+            'tiene_camara': camara,
+        },
+    )
+    ControladorAcceso.objects.update_or_create(
+        numero_serie=serie,
+        defaults={
+            'direccion_ip': ip,
+            'estado_conexion': 'Desconectado',
+            'punto_acceso': punto,
+            'edificio': edificio,
+        },
+    )
+    return punto
+
+
 def _edificio_con_ingreso(nombre, direccion, serie, ip, zona_raiz='Ingreso principal'):
     edificio, _ = Edificio.objects.update_or_create(
         nombre=nombre,
@@ -34,18 +57,14 @@ def _edificio_con_ingreso(nombre, direccion, serie, ip, zona_raiz='Ingreso princ
         zona_padre=raiz,
         defaults={'nivel_seguridad': 'Media'},
     )
-    punto, _ = PuntoAcceso.objects.update_or_create(
-        descripcion=f'Tótem {nombre}',
-        defaults={'ubicacion_fisica': 'Entrada', 'zona': ingreso},
-    )
-    ControladorAcceso.objects.update_or_create(
-        numero_serie=serie,
-        defaults={
-            'direccion_ip': ip,
-            'estado_conexion': 'Desconectado',
-            'punto_acceso': punto,
-            'edificio': edificio,
-        },
+    _totem(
+        edificio,
+        ingreso,
+        f'Tótem entrada {nombre}',
+        serie,
+        ip,
+        'Entrada',
+        ubicacion='Hall — guardia + cámara',
     )
     return edificio, raiz, ingreso
 
@@ -94,6 +113,25 @@ class Command(BaseCommand):
             '10.0.0.40',
         )
 
+        _totem(
+            pellegrini,
+            ingreso_pel,
+            'Tótem salida Consorcio Pellegrini',
+            'PEL-SAL-01',
+            '10.0.0.31',
+            'Salida',
+            ubicacion='Hall — guardia + cámara',
+        )
+        _totem(
+            oficinas,
+            ingreso_of,
+            'Tótem salida Oficinas Macrocentro',
+            'OF-SAL-01',
+            '10.0.0.21',
+            'Salida',
+            ubicacion='Hall — guardia + cámara',
+        )
+
         cochera, _ = ComponenteZona.objects.update_or_create(
             nombre_zona='Cochera',
             edificio=pellegrini,
@@ -102,7 +140,13 @@ class Command(BaseCommand):
         )
         punto_cochera, _ = PuntoAcceso.objects.update_or_create(
             descripcion='Barrera cochera Pellegrini',
-            defaults={'ubicacion_fisica': 'Subsuelo', 'zona': cochera},
+            defaults={
+                'ubicacion_fisica': 'Subsuelo',
+                'zona': cochera,
+                'sentido': 'Entrada',
+                'tipo': 'Lector',
+                'tiene_camara': False,
+            },
         )
         ControladorAcceso.objects.update_or_create(
             numero_serie='PEL-COC-01',
@@ -241,7 +285,7 @@ class Command(BaseCommand):
             Credencial.objects.update_or_create(
                 codigo_referencia=item['tag'],
                 defaults={
-                    'tipo': 'RFID',
+                    'tipo': 'Magnetica',
                     'fecha_vencimiento': vencimiento,
                     'estado': 'Activa',
                     'persona': sujeto,
@@ -262,7 +306,7 @@ class Command(BaseCommand):
         Credencial.objects.update_or_create(
             codigo_referencia='TAG-BLOQ-01',
             defaults={
-                'tipo': 'RFID',
+                'tipo': 'Magnetica',
                 'fecha_vencimiento': vencimiento,
                 'estado': 'Bloqueada',
                 'persona': bloqueado,
@@ -283,7 +327,7 @@ class Command(BaseCommand):
         Credencial.objects.update_or_create(
             codigo_referencia='TAG-VENC-01',
             defaults={
-                'tipo': 'RFID',
+                'tipo': 'Magnetica',
                 'fecha_vencimiento': date(2020, 1, 1),
                 'estado': 'Activa',
                 'persona': vencido,
@@ -292,8 +336,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             'Demo multi-edificio lista. Panel: operador / apl2026. '
-            'Pellegrini 199.1.1.0 (ingreso) y 10.0.0.30 (cochera) | '
-            'Oficinas 10.0.0.20 | Depósito 10.0.0.40. '
+            'Pellegrini entrada 199.1.1.0 / salida 10.0.0.31 | '
+            'Oficinas entrada 10.0.0.20 / salida 10.0.0.21 | '
+            'Depósito 10.0.0.40. '
             'Llaves: TAG-PEL-01, TAG-OF-01, TAG-ENC-01, TAG-TEC-01, TAG-VIS-01, '
             'TAG-BLOQ-01, TAG-VENC-01.'
         ))

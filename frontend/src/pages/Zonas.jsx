@@ -31,6 +31,8 @@ export default function Zonas() {
     descripcion: '',
     ubicacion_fisica: '',
     zona: '',
+    sentido: 'Entrada',
+    tipo: 'Totem',
   });
 
   const cargar = async () => {
@@ -67,6 +69,7 @@ export default function Zonas() {
     await api.post('/puntos-acceso/', {
       ...puntoForm,
       zona: Number(puntoForm.zona),
+      tiene_camara: puntoForm.tipo === 'Totem',
     });
     setPuntoForm((prev) => ({ ...prev, descripcion: '', ubicacion_fisica: '' }));
     await cargar();
@@ -142,7 +145,7 @@ export default function Zonas() {
       </div>
 
       <div className="panel">
-        <h2>Punto de acceso (puerta / molinete)</h2>
+        <h2>Tótem / puerta</h2>
         <form className="form-grid" onSubmit={crearPunto}>
           <label>
             Descripción
@@ -173,6 +176,26 @@ export default function Zonas() {
               ))}
             </select>
           </label>
+          <label>
+            Sentido
+            <select
+              value={puntoForm.sentido}
+              onChange={(e) => setPuntoForm({ ...puntoForm, sentido: e.target.value })}
+            >
+              <option>Entrada</option>
+              <option>Salida</option>
+            </select>
+          </label>
+          <label>
+            Tipo
+            <select
+              value={puntoForm.tipo}
+              onChange={(e) => setPuntoForm({ ...puntoForm, tipo: e.target.value })}
+            >
+              <option value="Totem">Tótem con cámara</option>
+              <option value="Lector">Lector de puerta</option>
+            </select>
+          </label>
           <button className="btn btn-primary" type="submit">
             Crear punto
           </button>
@@ -181,7 +204,8 @@ export default function Zonas() {
           <thead>
             <tr>
               <th>Punto</th>
-              <th>Ubicación</th>
+              <th>Sentido</th>
+              <th>Tipo</th>
               <th>Zona</th>
             </tr>
           </thead>
@@ -189,7 +213,8 @@ export default function Zonas() {
             {puntos.map((p) => (
               <tr key={p.id}>
                 <td>{p.descripcion}</td>
-                <td>{p.ubicacion_fisica}</td>
+                <td>{p.sentido}</td>
+                <td>{p.tipo}</td>
                 <td>{p.zona_nombre}</td>
               </tr>
             ))}

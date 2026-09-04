@@ -111,8 +111,14 @@ class ComponenteZona(models.Model):
 
 
 class PuntoAcceso(models.Model):
+    TIPOS = [('Totem', 'Tótem con cámara'), ('Lector', 'Lector de puerta')]
+    SENTIDOS = [('Entrada', 'Entrada'), ('Salida', 'Salida')]
+
     descripcion = models.CharField(max_length=100)
     ubicacion_fisica = models.CharField(max_length=150)
+    tipo = models.CharField(max_length=20, choices=TIPOS, default='Totem')
+    sentido = models.CharField(max_length=20, choices=SENTIDOS, default='Entrada')
+    tiene_camara = models.BooleanField(default=True)
     zona = models.ForeignKey(
         ComponenteZona,
         on_delete=models.CASCADE,
@@ -120,7 +126,7 @@ class PuntoAcceso(models.Model):
     )
 
     def __str__(self):
-        return self.descripcion
+        return f"{self.descripcion} ({self.sentido})"
 
 
 class ControladorAcceso(models.Model):
@@ -151,7 +157,7 @@ class ControladorAcceso(models.Model):
 class Credencial(models.Model):
     ESTADOS = [('Activa', 'Activa'), ('Bloqueada', 'Bloqueada'), ('Vencida', 'Vencida')]
     codigo_referencia = models.CharField(max_length=100, unique=True)
-    tipo = models.CharField(max_length=50, default='RFID')
+    tipo = models.CharField(max_length=50, default='Magnetica')
     fecha_vencimiento = models.DateField()
     estado = models.CharField(max_length=20, choices=ESTADOS, default='Activa')
     persona = models.ForeignKey(
@@ -167,6 +173,7 @@ class Credencial(models.Model):
 class RegistroAcceso(models.Model):
     fecha_hora = models.DateTimeField(auto_now_add=True)
     resultado = models.CharField(max_length=20)
+    sentido = models.CharField(max_length=20, default='Entrada')
     motivo_rechazo = models.CharField(max_length=200, blank=True, null=True)
     dispositivo = models.ForeignKey(
         ControladorAcceso,

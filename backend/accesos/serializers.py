@@ -82,6 +82,9 @@ class ControladorAccesoSerializer(serializers.ModelSerializer):
     punto_descripcion = serializers.CharField(source='punto_acceso.descripcion', read_only=True)
     zona_nombre = serializers.CharField(source='punto_acceso.zona.nombre_zona', read_only=True)
     edificio_nombre = serializers.CharField(source='edificio.nombre', read_only=True)
+    sentido = serializers.CharField(source='punto_acceso.sentido', read_only=True)
+    tipo_punto = serializers.CharField(source='punto_acceso.tipo', read_only=True)
+    tiene_camara = serializers.BooleanField(source='punto_acceso.tiene_camara', read_only=True)
     en_linea = serializers.SerializerMethodField()
 
     class Meta:
@@ -99,6 +102,7 @@ class RegistroAccesoSerializer(serializers.ModelSerializer):
     persona_nombre = serializers.SerializerMethodField()
     dispositivo_ip = serializers.SerializerMethodField()
     zona_nombre = serializers.SerializerMethodField()
+    edificio_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = RegistroAcceso
@@ -120,6 +124,11 @@ class RegistroAccesoSerializer(serializers.ModelSerializer):
         if not obj.dispositivo:
             return None
         return obj.dispositivo.punto_acceso.zona.nombre_zona
+
+    def get_edificio_nombre(self, obj):
+        if not obj.dispositivo or not obj.dispositivo.edificio:
+            return None
+        return obj.dispositivo.edificio.nombre
 
 
 class ResolucionAlertaSerializer(serializers.ModelSerializer):

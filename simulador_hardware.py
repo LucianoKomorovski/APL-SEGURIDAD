@@ -8,6 +8,7 @@ URL_BASE = "http://127.0.0.1:8000/api"
 IP_PELLEGRINI = "199.1.1.0"
 IP_OFICINAS = "10.0.0.20"
 IP_COCHERA = "10.0.0.30"
+IP_SALIDA_PEL = "10.0.0.31"
 IP_DEPOSITO = "10.0.0.40"
 
 TAGS_DEMO = [
@@ -89,8 +90,8 @@ def demo_automatica():
     print("=== Demo multi-edificio ===")
     heartbeat(IP_PELLEGRINI)
     pasar_tarjeta("TAG-PEL-01", IP_PELLEGRINI)
+    pasar_tarjeta("TAG-ENC-01", IP_SALIDA_PEL)
     pasar_tarjeta("TAG-PEL-01", IP_OFICINAS)
-    pasar_tarjeta("TAG-ENC-01", IP_COCHERA)
     pasar_tarjeta("TAG-PEL-01", IP_COCHERA)
     pasar_tarjeta("TAG-TEC-01", IP_DEPOSITO)
     pasar_tarjeta("TAG-BLOQ-01", IP_PELLEGRINI)

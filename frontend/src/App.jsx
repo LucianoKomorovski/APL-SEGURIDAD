@@ -19,8 +19,8 @@ import Dispositivos from './pages/Dispositivos';
 import Simulador from './pages/Simulador';
 
 const VISTAS = [
-  { id: 'dashboard', label: 'Monitoreo', icon: LayoutDashboard },
-  { id: 'usuarios', label: 'Clientes', icon: Users },
+  { id: 'dashboard', label: 'En vivo', icon: LayoutDashboard },
+  { id: 'usuarios', label: 'Clientes y llaves', icon: Users },
   { id: 'zonas', label: 'Zonas', icon: Map },
   { id: 'niveles', label: 'Niveles', icon: Layers },
   { id: 'historial', label: 'Auditoría', icon: History },
@@ -48,7 +48,7 @@ function Login({ onLogin }) {
     <div className="login-wrap">
       <div className="login-card">
         <h1>SGCA-APL</h1>
-        <p>Panel operativo — Trabajo de diploma</p>
+        <p>Panel del operador — entradas y salidas en vivo</p>
         <form onSubmit={enviar}>
           <label>
             Usuario

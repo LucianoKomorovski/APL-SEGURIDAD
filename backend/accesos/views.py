@@ -43,8 +43,28 @@ def _marcar_controlador_en_linea(dispositivo):
 
 
 class SujetoAccesoViewSet(viewsets.ModelViewSet):
-    queryset = SujetoAcceso.objects.select_related('nivel_acceso', 'edificio').all()
+    queryset = SujetoAcceso.objects.select_related('nivel_acceso', 'edificio').prefetch_related(
+        'credenciales',
+    ).all()
     serializer_class = SujetoAccesoSerializer
+
+    def _resolver_edificio_y_nivel(self, data):
+        edificio_obj = None
+        edificio_id = data.get('edificio')
+        if edificio_id not in (None, '', 'null'):
+            try:
+                edificio_obj = Edificio.objects.get(pk=edificio_id)
+            except (Edificio.DoesNotExist, ValueError, TypeError):
+                return None, None, Response({"error": "Edificio no encontrado"}, status=400)
+
+        nivel_obj = None
+        nivel_id = data.get('nivel_acceso')
+        if nivel_id not in (None, '', 'null'):
+            try:
+                nivel_obj = NivelAcceso.objects.get(pk=nivel_id)
+            except (NivelAcceso.DoesNotExist, ValueError, TypeError):
+                return None, None, Response({"error": "Nivel de acceso no encontrado"}, status=400)
+        return edificio_obj, nivel_obj, None
 
     def create(self, request, *args, **kwargs):
         nombre = request.data.get('nombre')
@@ -52,10 +72,6 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
         dni = request.data.get('dni')
         email = request.data.get('email')
         codigo_referencia = request.data.get('codigo_referencia')
-        edificio_id = request.data.get('edificio')
-        nivel_id = request.data.get('nivel_acceso')
-        telefono = request.data.get('telefono') or ''
-        legajo = request.data.get('legajo_empleado') or None
 
         if not all([nombre, apellido, dni, email]):
             return Response(
@@ -63,29 +79,19 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
                 status=400,
             )
 
+        edificio_obj, nivel_obj, error = self._resolver_edificio_y_nivel(request.data)
+        if error:
+            return error
+
         try:
             with transaction.atomic():
-                edificio_obj = None
-                if edificio_id:
-                    try:
-                        edificio_obj = Edificio.objects.get(pk=edificio_id)
-                    except Edificio.DoesNotExist:
-                        return Response({"error": "Edificio no encontrado"}, status=400)
-
-                nivel_obj = None
-                if nivel_id:
-                    try:
-                        nivel_obj = NivelAcceso.objects.get(pk=nivel_id)
-                    except NivelAcceso.DoesNotExist:
-                        return Response({"error": "Nivel de acceso no encontrado"}, status=400)
-
                 sujeto = SujetoAcceso.objects.create(
                     nombre=nombre,
                     apellido=apellido,
                     dni=dni,
                     email=email,
-                    telefono=telefono,
-                    legajo_empleado=legajo,
+                    telefono=request.data.get('telefono') or '',
+                    legajo_empleado=request.data.get('legajo_empleado') or None,
                     edificio=edificio_obj,
                     nivel_acceso=nivel_obj,
                 )
@@ -93,7 +99,7 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
                 if codigo_referencia:
                     Credencial.objects.create(
                         codigo_referencia=codigo_referencia,
-                        tipo=request.data.get('tipo_credencial') or 'RFID',
+                        tipo=request.data.get('tipo_credencial') or 'Magnetica',
                         fecha_vencimiento=timezone.now().date() + timedelta(days=365),
                         estado='Activa',
                         persona=sujeto,
@@ -106,6 +112,69 @@ class SujetoAccesoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(sujeto)
         return Response(serializer.data, status=201)
+
+    def update(self, request, *args, **kwargs):
+        sujeto = self.get_object()
+        edificio_obj, nivel_obj, error = self._resolver_edificio_y_nivel(request.data)
+        if error:
+            return error
+
+        try:
+            with transaction.atomic():
+                for campo in ('nombre', 'apellido', 'email', 'telefono', 'estado'):
+                    if campo in request.data and request.data.get(campo) not in (None,):
+                        setattr(sujeto, campo, request.data.get(campo))
+                if 'dni' in request.data and request.data.get('dni') not in (None, ''):
+                    sujeto.dni = request.data.get('dni')
+                if 'edificio' in request.data:
+                    sujeto.edificio = edificio_obj
+                if 'nivel_acceso' in request.data:
+                    sujeto.nivel_acceso = nivel_obj
+                sujeto.save()
+
+                codigo = request.data.get('codigo_referencia')
+                estado_llave = request.data.get('estado_llave')
+                credencial = sujeto.credenciales.order_by('id').first()
+                if credencial and (codigo or estado_llave):
+                    if codigo:
+                        credencial.codigo_referencia = codigo
+                    if estado_llave:
+                        credencial.estado = estado_llave
+                    credencial.save()
+                elif codigo and not credencial:
+                    Credencial.objects.create(
+                        codigo_referencia=codigo,
+                        tipo='Magnetica',
+                        fecha_vencimiento=timezone.now().date() + timedelta(days=365),
+                        estado=estado_llave or 'Activa',
+                        persona=sujeto,
+                    )
+        except IntegrityError as e:
+            return Response(
+                {"error": f"Datos duplicados o invalidos: {str(e)}"},
+                status=400,
+            )
+
+        sujeto.refresh_from_db()
+        return Response(self.get_serializer(sujeto).data)
+
+    @action(detail=True, methods=['post'], url_path='llaves')
+    def agregar_llave(self, request, pk=None):
+        sujeto = self.get_object()
+        codigo = request.data.get('codigo_referencia')
+        if not codigo:
+            return Response({'error': 'Falta codigo_referencia'}, status=400)
+        try:
+            credencial = Credencial.objects.create(
+                codigo_referencia=codigo,
+                tipo=request.data.get('tipo_credencial') or 'Magnetica',
+                fecha_vencimiento=timezone.now().date() + timedelta(days=365),
+                estado='Activa',
+                persona=sujeto,
+            )
+        except IntegrityError as e:
+            return Response({'error': f'Llave duplicada: {e}'}, status=400)
+        return Response(CredencialSerializer(credencial).data, status=201)
 
 
 class PuntoAccesoViewSet(viewsets.ModelViewSet):
@@ -125,6 +194,9 @@ class RegistroAccesoViewSet(viewsets.ModelViewSet):
         resultado = self.request.query_params.get('resultado')
         if resultado:
             qs = qs.filter(resultado=resultado)
+        sentido = self.request.query_params.get('sentido')
+        if sentido:
+            qs = qs.filter(sentido=sentido)
         return qs
 
 
@@ -229,15 +301,22 @@ def procesar_lectura_totem(request):
 
     _marcar_controlador_en_linea(resultado.dispositivo)
 
+    punto = resultado.dispositivo.punto_acceso
     RegistroAcceso.objects.create(
         resultado='concedido' if resultado.concedido else 'rechazado',
+        sentido=punto.sentido if punto else 'Entrada',
         motivo_rechazo=None if resultado.concedido else resultado.motivo,
         dispositivo=resultado.dispositivo,
         credencial=resultado.credencial,
     )
 
     if resultado.concedido:
-        return Response({'status': 'ok', 'accion': resultado.accion, 'motivo': None})
+        return Response({
+            'status': 'ok',
+            'accion': resultado.accion,
+            'motivo': None,
+            'sentido': punto.sentido if punto else 'Entrada',
+        })
 
     AlertaSeguridad.objects.create(
         tipo_alerta=resultado.tipo_alerta,
@@ -246,7 +325,12 @@ def procesar_lectura_totem(request):
         dispositivo=resultado.dispositivo,
     )
     return Response(
-        {'status': 'ERROR', 'accion': resultado.accion, 'motivo': resultado.motivo},
+        {
+            'status': 'ERROR',
+            'accion': resultado.accion,
+            'motivo': resultado.motivo,
+            'sentido': punto.sentido if punto else 'Entrada',
+        },
         status=403,
     )
 

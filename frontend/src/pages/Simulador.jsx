@@ -53,8 +53,8 @@ export default function Simulador() {
     <div>
       <h1>Tótem virtual</h1>
       <p>
-        Cada lector pertenece a un edificio cliente. Probá un llavero de Pellegrini
-        en oficinas: tiene que denegar por edificio.
+        Cada tótem es de entrada o de salida. El guardia y la cámara están en el sitio;
+        acá se registra el pase de la llave magnética.
       </p>
       <div className="totem">
         <div className="panel">
@@ -64,7 +64,7 @@ export default function Simulador() {
             <select value={ip} onChange={(e) => setIp(e.target.value)}>
               {controladores.map((c) => (
                 <option key={c.id} value={c.direccion_ip}>
-                  {c.edificio_nombre || 'Sin edificio'} — {c.zona_nombre} ({c.direccion_ip})
+                  {c.edificio_nombre || 'Sin edificio'} — {c.sentido || 'Entrada'} ({c.direccion_ip})
                 </option>
               ))}
             </select>
@@ -89,7 +89,7 @@ export default function Simulador() {
             ))}
           </div>
           <button className="btn btn-ok" type="button" onClick={() => leer()}>
-            Pasar tarjeta
+            Pasar llave
           </button>
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             <button className="btn btn-bad" type="button" onClick={() => evento('PUERTA_FORZADA')}>
