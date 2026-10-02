@@ -1,35 +1,61 @@
-import { useEffect, useState } from 'react';
-import { LogIn, LogOut, Ban, Radio } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, formatFecha } from '../api';
+import EdificioSelect from '../EdificioSelect';
+import PageHead from '../PageHead';
 
-export default function Dashboard({ operador }) {
+function lista(data) {
+  return Array.isArray(data) ? data : [];
+}
+
+export default function Dashboard({ edificios, edificioId, onEdificio }) {
+  const [alertasAbiertas, setAlertasAbiertas] = useState([]);
+  const [alertasTodas, setAlertasTodas] = useState([]);
+  const [listaAbierta, setListaAbierta] = useState(false);
   const [alertas, setAlertas] = useState([]);
   const [registros, setRegistros] = useState([]);
   const [controladores, setControladores] = useState([]);
   const [observaciones, setObservaciones] = useState('');
 
-  const cargar = async () => {
-    try {
-      const [a, r, c] = await Promise.all([
-        api.get('/alertas/'),
-        api.get('/registros/'),
-        api.get('/controladores/'),
-      ]);
-      setAlertas(Array.isArray(a) ? a : []);
-      setRegistros(Array.isArray(r) ? r.slice(0, 25) : []);
-      setControladores(Array.isArray(c) ? c : []);
-    } catch (err) {
-      console.error(err);
+  const cargar = useCallback(async () => {
+    const abiertas = lista(await api.get('/alertas/?abiertas=1'));
+    setAlertasAbiertas(abiertas);
+    if (listaAbierta) {
+      setAlertasTodas(lista(await api.get('/alertas/')));
     }
-  };
+    if (!edificioId) return;
+    const q = `edificio=${edificioId}`;
+    const [r, c, a] = await Promise.all([
+      api.get(`/registros/?${q}&hoy=1`),
+      api.get(`/controladores/?${q}`),
+      api.get(`/alertas/?abiertas=1&${q}`),
+    ]);
+    setRegistros(lista(r));
+    setControladores(lista(c));
+    setAlertas(lista(a));
+  }, [edificioId, listaAbierta]);
 
   useEffect(() => {
-    cargar();
-    const id = setInterval(cargar, 2500);
-    return () => clearInterval(id);
-  }, []);
+    let activo = true;
+    const tick = () => {
+      cargar().catch((err) => {
+        if (activo) console.error(err);
+      });
+    };
+    tick();
+    const id = setInterval(tick, 2500);
+    return () => {
+      activo = false;
+      clearInterval(id);
+    };
+  }, [cargar]);
 
-  const pendientes = alertas.filter((a) => a.estado_atencion !== 'Resuelta').length;
+  const conteos = edificios.map((ed) => ({
+    id: ed.id,
+    nombre: ed.nombre,
+    abiertas: alertasAbiertas.filter((a) => String(a.edificio_id) === String(ed.id)).length,
+  }));
+  const maxAbiertas = Math.max(1, ...conteos.map((c) => c.abiertas));
+
   const entradas = registros.filter(
     (r) => r.sentido === 'Entrada' && r.resultado === 'concedido',
   ).length;
@@ -38,15 +64,15 @@ export default function Dashboard({ operador }) {
   ).length;
   const denegados = registros.filter((r) => r.resultado === 'rechazado').length;
   const enLinea = controladores.filter((c) => c.en_linea).length;
+  const fueraDeLinea = controladores.length - enLinea;
 
   const resolver = async (id) => {
     try {
       await api.post(`/alertas/${id}/resolver/`, {
         observaciones: observaciones || 'Resuelta desde el panel operativo.',
-        operador: operador?.id,
       });
       setObservaciones('');
-      cargar();
+      await cargar();
     } catch (err) {
       alert(err.message);
     }
@@ -54,42 +80,79 @@ export default function Dashboard({ operador }) {
 
   return (
     <div>
-      <h1>Entradas y salidas en vivo</h1>
-      <p style={{ color: '#64748b', marginTop: 0 }}>
-        Operador APL: pases de todos los edificios. El tótem con cámara y el guardia
-        están en la puerta; acá se ve el movimiento.
-      </p>
-      <div className="cards">
-        <div className="card ok">
-          <h3>
-            <LogIn size={16} color="#22c55e" /> Entradas
-          </h3>
-          <p>{entradas}</p>
+      <PageHead
+        kicker="Operación"
+        title="Entradas y salidas en vivo"
+        lede="Elegí un edificio para ver los movimientos del día y las alertas pendientes."
+      />
+
+      <button
+        type="button"
+        className={`alerta-grafico${listaAbierta ? ' abierto' : ''}`}
+        aria-expanded={listaAbierta}
+        onClick={() => setListaAbierta((abierta) => !abierta)}
+      >
+        <span className="alerta-grafico-titulo">
+          Alertas sin resolver · todos los edificios
+          <span className="alerta-grafico-accion">{listaAbierta ? 'Cerrar lista' : 'Ver todas'}</span>
+        </span>
+        {conteos.length === 0 ? (
+          <span className="alerta-vacio">Sin edificios.</span>
+        ) : (
+          conteos.map((fila) => (
+            <span className="alerta-fila" key={fila.id}>
+              <span className="alerta-nombre">{fila.nombre}</span>
+              <span className="alerta-barra" aria-hidden="true">
+                <span style={{ width: `${(fila.abiertas / maxAbiertas) * 100}%` }} />
+              </span>
+              <span className={fila.abiertas > 0 ? 'alerta-cuenta bad' : 'alerta-cuenta'}>
+                {fila.abiertas}
+              </span>
+            </span>
+          ))
+        )}
+      </button>
+
+      {listaAbierta && (
+        <div className="panel alerta-lista">
+          <h2>Todas las alertas</h2>
+          <label>
+            Observación al resolver
+            <input
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              placeholder="Ej: el guardia del tótem confirmó identidad"
+            />
+          </label>
+          <TablaAlertas alertas={alertasTodas} onResolver={resolver} mostrarEdificio />
         </div>
-        <div className="card info">
-          <h3>
-            <LogOut size={16} color="#3b82f6" /> Salidas
-          </h3>
-          <p>{salidas}</p>
+      )}
+
+      <EdificioSelect edificios={edificios} edificioId={edificioId} onChange={onEdificio} />
+
+      <div className="metrics">
+        <div className="metric">
+          <span>Entradas de hoy</span>
+          <strong>{entradas}</strong>
         </div>
-        <div className="card bad">
-          <h3>
-            <Ban size={16} color="#ef4444" /> Denegados
-          </h3>
-          <p>{denegados}</p>
+        <div className="metric">
+          <span>Salidas de hoy</span>
+          <strong>{salidas}</strong>
         </div>
-        <div className="card warn">
-          <h3>
-            <Radio size={16} color="#f59e0b" /> Tótems en línea
-          </h3>
-          <p>
+        <div className="metric">
+          <span>Denegados de hoy</span>
+          <strong className={denegados > 0 ? 'bad' : ''}>{denegados}</strong>
+        </div>
+        <div className="metric">
+          <span>Tótems en línea</span>
+          <strong className={fueraDeLinea > 0 ? 'bad' : ''}>
             {enLinea}/{controladores.length}
-          </p>
+          </strong>
         </div>
       </div>
 
       <div className="panel">
-        <h2>Últimos movimientos</h2>
+        <h2>Movimientos de hoy</h2>
         <table>
           <thead>
             <tr>
@@ -97,7 +160,6 @@ export default function Dashboard({ operador }) {
               <th>Sentido</th>
               <th>Cliente</th>
               <th>Llave</th>
-              <th>Edificio</th>
               <th>Tótem</th>
               <th>Resultado</th>
             </tr>
@@ -105,24 +167,17 @@ export default function Dashboard({ operador }) {
           <tbody>
             {registros.length === 0 ? (
               <tr>
-                <td colSpan="7">Todavía no hay pases. Usá el tótem virtual para generarlos.</td>
+                <td className="empty" colSpan="6">
+                  Hoy no hay pases en este edificio.
+                </td>
               </tr>
             ) : (
               registros.map((reg) => (
                 <tr key={reg.id}>
                   <td>{formatFecha(reg.fecha_hora)}</td>
-                  <td>
-                    <span
-                      className={
-                        reg.sentido === 'Salida' ? 'badge badge-muted' : 'badge badge-ok'
-                      }
-                    >
-                      {reg.sentido}
-                    </span>
-                  </td>
+                  <td>{reg.sentido}</td>
                   <td>{reg.persona_nombre || '—'}</td>
-                  <td>{reg.codigo_rfid || '—'}</td>
-                  <td>{reg.edificio_nombre || '—'}</td>
+                  <td className="mono">{reg.codigo_rfid || '—'}</td>
                   <td>{reg.zona_nombre || '—'}</td>
                   <td>
                     <span
@@ -141,7 +196,7 @@ export default function Dashboard({ operador }) {
       </div>
 
       <div className="panel">
-        <h2>Incidentes ({pendientes} abiertos)</h2>
+        <h2>Alertas sin resolver ({alertas.length})</h2>
         <label>
           Observación al resolver
           <input
@@ -150,55 +205,64 @@ export default function Dashboard({ operador }) {
             placeholder="Ej: el guardia del tótem confirmó identidad"
           />
         </label>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tipo</th>
-              <th>Lugar</th>
-              <th>Gravedad</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {alertas.length === 0 ? (
-              <tr>
-                <td colSpan="6">Sin incidentes.</td>
-              </tr>
-            ) : (
-              alertas.map((alerta) => (
-                <tr key={alerta.id}>
-                  <td>#{alerta.id}</td>
-                  <td>{alerta.tipo_alerta}</td>
-                  <td>{alerta.zona_nombre || alerta.dispositivo_ip}</td>
-                  <td>{alerta.nivel_gravedad}</td>
-                  <td>
-                    <span
-                      className={
-                        alerta.estado_atencion === 'Resuelta'
-                          ? 'badge badge-ok'
-                          : 'badge badge-bad'
-                      }
-                    >
-                      {alerta.estado_atencion}
-                    </span>
-                  </td>
-                  <td>
-                    {alerta.estado_atencion !== 'Resuelta' ? (
-                      <button className="btn btn-primary" onClick={() => resolver(alerta.id)}>
-                        Resolver
-                      </button>
-                    ) : (
-                      <span className="badge badge-muted">Cerrada</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <TablaAlertas alertas={alertas} onResolver={resolver} />
       </div>
     </div>
+  );
+}
+
+function TablaAlertas({ alertas, onResolver, mostrarEdificio = false }) {
+  const columnas = mostrarEdificio ? 7 : 6;
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          {mostrarEdificio ? <th>Edificio</th> : null}
+          <th>Tipo</th>
+          <th>Lugar</th>
+          <th>Gravedad</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {alertas.length === 0 ? (
+          <tr>
+            <td className="empty" colSpan={columnas}>
+              Sin alertas.
+            </td>
+          </tr>
+        ) : (
+          alertas.map((alerta) => (
+            <tr key={alerta.id}>
+              <td>#{alerta.id}</td>
+              {mostrarEdificio ? <td>{alerta.edificio_nombre || '—'}</td> : null}
+              <td>{alerta.tipo_alerta}</td>
+              <td>{alerta.zona_nombre || alerta.dispositivo_ip}</td>
+              <td>{alerta.nivel_gravedad}</td>
+              <td>
+                <span
+                  className={
+                    alerta.estado_atencion === 'Resuelta' ? 'badge badge-ok' : 'badge badge-bad'
+                  }
+                >
+                  {alerta.estado_atencion}
+                </span>
+              </td>
+              <td>
+                {alerta.estado_atencion !== 'Resuelta' ? (
+                  <button className="btn btn-primary" type="button" onClick={() => onResolver(alerta.id)}>
+                    Resolver
+                  </button>
+                ) : (
+                  <span className="badge badge-muted">Cerrada</span>
+                )}
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
   );
 }

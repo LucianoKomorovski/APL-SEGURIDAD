@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, formatFecha } from '../api';
+import PageHead from '../PageHead';
 
 export default function Dispositivos() {
   const [controladores, setControladores] = useState([]);
@@ -29,9 +30,28 @@ export default function Dispositivos() {
   };
 
   useEffect(() => {
-    cargar().catch((err) => alert(err.message));
-    const id = setInterval(() => cargar().catch(() => {}), 5000);
-    return () => clearInterval(id);
+    let activo = true;
+    const actualizar = () => Promise.all([
+      api.get('/controladores/'),
+      api.get('/puntos-acceso/'),
+      api.get('/edificios/'),
+    ]).then(([c, p, e]) => {
+      if (!activo) return;
+      setControladores(Array.isArray(c) ? c : []);
+      setPuntos(Array.isArray(p) ? p : []);
+      setEdificios(Array.isArray(e) ? e : []);
+      setForm((prev) => ({
+        ...prev,
+        punto_acceso: prev.punto_acceso || p[0]?.id || '',
+        edificio: prev.edificio || e[0]?.id || '',
+      }));
+    });
+    actualizar().catch((err) => alert(err.message));
+    const id = setInterval(() => actualizar().catch(() => {}), 5000);
+    return () => {
+      activo = false;
+      clearInterval(id);
+    };
   }, []);
 
   const crear = async (e) => {
@@ -49,13 +69,18 @@ export default function Dispositivos() {
 
   return (
     <div>
-      <h1>Controladoras</h1>
+      <PageHead
+        kicker="Red"
+        title="Controladoras"
+        lede="Alta de dispositivos y estado de conexión de cada tótem."
+      />
       <div className="panel">
         <h2>Alta de dispositivo</h2>
         <form className="form-grid" onSubmit={crear}>
           <label>
             IP
             <input
+              className="mono"
               value={form.direccion_ip}
               onChange={(e) => setForm({ ...form, direccion_ip: e.target.value })}
               placeholder="10.0.0.40"
@@ -96,7 +121,7 @@ export default function Dispositivos() {
               ))}
             </select>
           </label>
-          <button className="btn btn-ok" type="submit">
+          <button className="btn btn-primary" type="submit">
             Registrar
           </button>
         </form>
@@ -114,19 +139,27 @@ export default function Dispositivos() {
             </tr>
           </thead>
           <tbody>
-            {controladores.map((c) => (
-              <tr key={c.id}>
-                <td>{c.numero_serie}</td>
-                <td>{c.direccion_ip}</td>
-                <td>{c.zona_nombre}</td>
-                <td>{formatFecha(c.fecha_ultimo_ping)}</td>
-                <td>
-                  <span className={c.en_linea ? 'badge badge-ok' : 'badge badge-bad'}>
-                    {c.en_linea ? 'En línea' : c.estado_conexion}
-                  </span>
+            {controladores.length === 0 ? (
+              <tr>
+                <td className="empty" colSpan="5">
+                  Sin controladoras.
                 </td>
               </tr>
-            ))}
+            ) : (
+              controladores.map((c) => (
+                <tr key={c.id}>
+                  <td className="mono">{c.numero_serie}</td>
+                  <td className="mono">{c.direccion_ip}</td>
+                  <td>{c.zona_nombre}</td>
+                  <td>{formatFecha(c.fecha_ultimo_ping)}</td>
+                  <td>
+                    <span className={c.en_linea ? 'badge badge-ok' : 'badge badge-bad'}>
+                      {c.en_linea ? 'En línea' : c.estado_conexion}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -124,6 +124,12 @@ class MotorValidacionAcceso:
                 'Alta',
             )
 
+        if credencial.estado == 'Emitida':
+            return self._denegar(dispositivo, credencial, 'credencial sin entregar', 'Media')
+
+        if credencial.estado == 'Repuesta':
+            return self._denegar(dispositivo, credencial, 'credencial reemplazada', 'Media')
+
         if credencial.estado == 'Bloqueada':
             return self._denegar(dispositivo, credencial, 'tarjeta bloqueada', 'Alta')
 

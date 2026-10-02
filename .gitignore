@@ -1,0 +1,4 @@
+/_backups/
+/.venv/
+**/__pycache__/
+*.py[cod]

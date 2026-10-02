@@ -1,23 +1,33 @@
 import { useEffect, useState } from 'react';
 import { api, formatFecha } from '../api';
+import EdificioSelect from '../EdificioSelect';
+import PageHead from '../PageHead';
 
-export default function Historial() {
+export default function Historial({ edificios, edificioId, onEdificio }) {
   const [registros, setRegistros] = useState([]);
   const [filtro, setFiltro] = useState('');
 
-  const cargar = async (resultado = filtro) => {
-    const qs = resultado ? `?resultado=${resultado}` : '';
-    const data = await api.get(`/registros/${qs}`);
-    setRegistros(Array.isArray(data) ? data : []);
-  };
-
   useEffect(() => {
-    cargar('').catch((err) => alert(err.message));
-  }, []);
+    if (!edificioId) return undefined;
+    let activo = true;
+    const params = new URLSearchParams({ edificio: edificioId });
+    if (filtro) params.set('resultado', filtro);
+    api.get(`/registros/?${params}`).then((data) => {
+      if (activo) setRegistros(Array.isArray(data) ? data : []);
+    }).catch((err) => alert(err.message));
+    return () => {
+      activo = false;
+    };
+  }, [edificioId, filtro]);
 
   return (
     <div>
-      <h1>Auditoría de entradas y salidas</h1>
+      <PageHead
+        kicker="Registro"
+        title="Auditoría de entradas y salidas"
+        lede="Historial completo de pases de este edificio, concedidos y denegados."
+      />
+      <EdificioSelect edificios={edificios} edificioId={edificioId} onChange={onEdificio} />
       <div className="panel">
         <div className="form-grid">
           <label>
@@ -26,7 +36,6 @@ export default function Historial() {
               value={filtro}
               onChange={(e) => {
                 setFiltro(e.target.value);
-                cargar(e.target.value);
               }}
             >
               <option value="">Todos</option>
@@ -42,33 +51,39 @@ export default function Historial() {
               <th>Sentido</th>
               <th>Persona</th>
               <th>Llave</th>
-              <th>Edificio</th>
               <th>Tótem</th>
               <th>Resultado</th>
               <th>Motivo</th>
             </tr>
           </thead>
           <tbody>
-            {registros.map((r) => (
-              <tr key={r.id}>
-                <td>{formatFecha(r.fecha_hora)}</td>
-                <td>{r.sentido}</td>
-                <td>{r.persona_nombre || '—'}</td>
-                <td>{r.codigo_rfid || '—'}</td>
-                <td>{r.edificio_nombre || '—'}</td>
-                <td>{r.zona_nombre || '—'}</td>
-                <td>
-                  <span
-                    className={
-                      r.resultado === 'concedido' ? 'badge badge-ok' : 'badge badge-bad'
-                    }
-                  >
-                    {r.resultado}
-                  </span>
+            {registros.length === 0 ? (
+              <tr>
+                <td className="empty" colSpan="7">
+                  Sin registros para este filtro.
                 </td>
-                <td>{r.motivo_rechazo || '—'}</td>
               </tr>
-            ))}
+            ) : (
+              registros.map((r) => (
+                <tr key={r.id}>
+                  <td>{formatFecha(r.fecha_hora)}</td>
+                  <td>{r.sentido}</td>
+                  <td>{r.persona_nombre || '—'}</td>
+                  <td className="mono">{r.codigo_rfid || '—'}</td>
+                  <td>{r.zona_nombre || '—'}</td>
+                  <td>
+                    <span
+                      className={
+                        r.resultado === 'concedido' ? 'badge badge-ok' : 'badge badge-bad'
+                      }
+                    >
+                      {r.resultado}
+                    </span>
+                  </td>
+                  <td className={r.motivo_rechazo ? '' : 'muted'}>{r.motivo_rechazo || '—'}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

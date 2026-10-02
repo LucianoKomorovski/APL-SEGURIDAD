@@ -1,6 +1,7 @@
 from datetime import date, time, timedelta
 
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -8,6 +9,7 @@ from accesos.models import (
     ComponenteZona,
     ControladorAcceso,
     Credencial,
+    CuentaSistema,
     Edificio,
     HorarioPermitido,
     NivelAcceso,
@@ -76,23 +78,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        # Datos viejos del demo "sede APL / taller técnico": eso no es el dominio.
-        Edificio.objects.filter(nombre='Sede APL Rosario').delete()
-        ComponenteZona.objects.filter(
-            nombre_zona__in=['Taller técnico', 'Sala de monitoreo', 'Predio APL', 'Hall de ingreso'],
-        ).delete()
-        NivelAcceso.objects.filter(
-            nombre_nivel__in=[
-                'Visitante',
-                'Operador de monitoreo',
-                'Técnico instalador',
-                'Administrador de predio',
-            ],
-        ).delete()
-        Credencial.objects.filter(
-            codigo_referencia__in=['TAG-OP-01', 'TAG-ADM-01', 'TAG-VIS-01'],
-        ).delete()
-
         pellegrini, raiz_pel, ingreso_pel = _edificio_con_ingreso(
             'Consorcio Pellegrini',
             'Av. Pellegrini 1200, Rosario',
@@ -282,7 +267,7 @@ class Command(BaseCommand):
                 dni=item['dni'],
                 defaults=item['defaults'],
             )
-            Credencial.objects.update_or_create(
+            Credencial.objects.get_or_create(
                 codigo_referencia=item['tag'],
                 defaults={
                     'tipo': 'Magnetica',
@@ -291,6 +276,39 @@ class Command(BaseCommand):
                     'persona': sujeto,
                 },
             )
+
+        usuario_operador, _ = User.objects.get_or_create(
+            username='operador',
+            defaults={
+                'first_name': operador.nombre,
+                'last_name': operador.apellido,
+                'email': operador.email,
+            },
+        )
+        usuario_operador.set_password('apl2026')
+        usuario_operador.is_active = True
+        usuario_operador.save()
+        CuentaSistema.objects.update_or_create(
+            persona=operador,
+            defaults={'usuario': usuario_operador, 'rol': 'Operador', 'activo': True},
+        )
+
+        persona_tecnica = SujetoAcceso.objects.get(dni=40111002)
+        usuario_tecnico, _ = User.objects.get_or_create(
+            username='tecnico',
+            defaults={
+                'first_name': persona_tecnica.nombre,
+                'last_name': persona_tecnica.apellido,
+                'email': persona_tecnica.email,
+            },
+        )
+        usuario_tecnico.set_password('apl2026')
+        usuario_tecnico.is_active = True
+        usuario_tecnico.save()
+        CuentaSistema.objects.update_or_create(
+            persona=persona_tecnica,
+            defaults={'usuario': usuario_tecnico, 'rol': 'Tecnico', 'activo': True},
+        )
 
         bloqueado, _ = SujetoAcceso.objects.update_or_create(
             dni=40111005,
@@ -303,7 +321,7 @@ class Command(BaseCommand):
                 'edificio': pellegrini,
             },
         )
-        Credencial.objects.update_or_create(
+        Credencial.objects.get_or_create(
             codigo_referencia='TAG-BLOQ-01',
             defaults={
                 'tipo': 'Magnetica',
@@ -324,7 +342,7 @@ class Command(BaseCommand):
                 'edificio': pellegrini,
             },
         )
-        Credencial.objects.update_or_create(
+        Credencial.objects.get_or_create(
             codigo_referencia='TAG-VENC-01',
             defaults={
                 'tipo': 'Magnetica',
@@ -335,7 +353,7 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS(
-            'Demo multi-edificio lista. Panel: operador / apl2026. '
+            'Demo multi-edificio lista. Cuentas: operador / apl2026 y tecnico / apl2026. '
             'Pellegrini entrada 199.1.1.0 / salida 10.0.0.31 | '
             'Oficinas entrada 10.0.0.20 / salida 10.0.0.21 | '
             'Depósito 10.0.0.40. '

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, DIAS } from '../api';
+import EdificioSelect from '../EdificioSelect';
+import PageHead from '../PageHead';
 
-export default function Niveles() {
+export default function Niveles({ edificios, edificioId, onEdificio }) {
   const [niveles, setNiveles] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [nombre, setNombre] = useState('');
@@ -15,15 +17,45 @@ export default function Niveles() {
   });
 
   const cargar = async () => {
-    const [n, z] = await Promise.all([api.get('/niveles/'), api.get('/zonas/')]);
-    setNiveles(Array.isArray(n) ? n : []);
+    if (!edificioId) return;
+    const q = `?edificio=${edificioId}`;
+    const [n, z] = await Promise.all([api.get(`/niveles/${q}`), api.get(`/zonas/${q}`)]);
+    const listaNiveles = Array.isArray(n) ? n : [];
+    setNiveles(listaNiveles);
     setZonas(Array.isArray(z) ? z : []);
-    setHorario((prev) => ({ ...prev, nivel: prev.nivel || n[0]?.id || '' }));
+    setHorario((prev) => ({
+      ...prev,
+      nivel: listaNiveles.some((nivel) => String(nivel.id) === String(prev.nivel))
+        ? prev.nivel
+        : listaNiveles[0]?.id || '',
+    }));
   };
 
   useEffect(() => {
-    cargar().catch((err) => alert(err.message));
-  }, []);
+    if (!edificioId) return undefined;
+    let activo = true;
+    const q = `?edificio=${edificioId}`;
+    Promise.all([api.get(`/niveles/${q}`), api.get(`/zonas/${q}`)]).then(([n, z]) => {
+      if (!activo) return;
+      const listaNiveles = Array.isArray(n) ? n : [];
+      setNiveles(listaNiveles);
+      setZonas(Array.isArray(z) ? z : []);
+      setHorario((prev) => ({
+        ...prev,
+        nivel: listaNiveles.some((nivel) => String(nivel.id) === String(prev.nivel))
+          ? prev.nivel
+          : listaNiveles[0]?.id || '',
+      }));
+    }).catch((err) => alert(err.message));
+    return () => {
+      activo = false;
+    };
+  }, [edificioId]);
+
+  const cambiarEdificio = (valor) => {
+    setZonasElegidas([]);
+    onEdificio(valor);
+  };
 
   const toggleZona = (id) => {
     setZonasElegidas((prev) =>
@@ -57,7 +89,12 @@ export default function Niveles() {
 
   return (
     <div>
-      <h1>Niveles y horarios</h1>
+      <PageHead
+        kicker="Permisos"
+        title="Niveles y horarios"
+        lede="Qué zonas de este edificio cubre cada nivel y en qué ventana horaria se puede pasar."
+      />
+      <EdificioSelect edificios={edificios} edificioId={edificioId} onChange={cambiarEdificio} />
       <div className="panel">
         <h2>Nuevo nivel</h2>
         <form onSubmit={crearNivel}>
@@ -71,19 +108,23 @@ export default function Niveles() {
               <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
             </label>
           </div>
-          <p>Zonas que cubre este nivel (un padre cubre a sus hijos):</p>
-          {zonas.map((z) => (
-            <label key={z.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-              <input
-                type="checkbox"
-                checked={zonasElegidas.includes(z.id)}
-                onChange={() => toggleZona(z.id)}
-              />
-              {z.nombre_zona}
-              {z.zona_padre_nombre ? ` (dentro de ${z.zona_padre_nombre})` : ''}
-            </label>
-          ))}
-          <button className="btn btn-ok" type="submit">
+          <p className="field-note">Zonas que cubre este nivel (un padre cubre a sus hijos)</p>
+          <div className="choice-grid">
+            {zonas.map((z) => (
+              <label key={z.id} className="choice">
+                <input
+                  type="checkbox"
+                  checked={zonasElegidas.includes(z.id)}
+                  onChange={() => toggleZona(z.id)}
+                />
+                <span>
+                  {z.nombre_zona}
+                  {z.zona_padre_nombre ? ` · ${z.zona_padre_nombre}` : ''}
+                </span>
+              </label>
+            ))}
+          </div>
+          <button className="btn btn-primary" type="submit">
             Crear nivel
           </button>
         </form>
@@ -91,39 +132,41 @@ export default function Niveles() {
 
       <div className="panel">
         <h2>Ventana horaria</h2>
-        <form className="form-grid" onSubmit={crearHorario}>
-          <label>
-            Nivel
-            <select
-              value={horario.nivel}
-              onChange={(e) => setHorario({ ...horario, nivel: e.target.value })}
-            >
-              {niveles.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.nombre_nivel}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Desde
-            <input
-              type="time"
-              value={horario.hora_inicio}
-              onChange={(e) => setHorario({ ...horario, hora_inicio: e.target.value })}
-            />
-          </label>
-          <label>
-            Hasta
-            <input
-              type="time"
-              value={horario.hora_fin}
-              onChange={(e) => setHorario({ ...horario, hora_fin: e.target.value })}
-            />
-          </label>
-          <div>
+        <form onSubmit={crearHorario}>
+          <div className="form-grid">
+            <label>
+              Nivel
+              <select
+                value={horario.nivel}
+                onChange={(e) => setHorario({ ...horario, nivel: e.target.value })}
+              >
+                {niveles.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.nombre_nivel}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Desde
+              <input
+                type="time"
+                value={horario.hora_inicio}
+                onChange={(e) => setHorario({ ...horario, hora_inicio: e.target.value })}
+              />
+            </label>
+            <label>
+              Hasta
+              <input
+                type="time"
+                value={horario.hora_fin}
+                onChange={(e) => setHorario({ ...horario, hora_fin: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className="choice-row">
             {DIAS.map((d) => (
-              <label key={d.id} style={{ flexDirection: 'row', display: 'inline-flex', marginRight: 8 }}>
+              <label key={d.id} className="choice">
                 <input
                   type="checkbox"
                   checked={horario.dias.includes(d.id)}
@@ -146,24 +189,31 @@ export default function Niveles() {
         </form>
       </div>
 
-      {niveles.map((n) => (
-        <div className="panel" key={n.id}>
-          <h2>{n.nombre_nivel}</h2>
-          <p>{n.descripcion}</p>
-          <p>
-            Zonas:{' '}
-            {(n.zonas_detalle || []).map((z) => z.nombre_zona).join(', ') || 'ninguna'}
-          </p>
-          <p>
-            Horarios:{' '}
-            {(n.horarios || []).length === 0
-              ? '24/7'
-              : n.horarios
-                  .map((h) => `${h.hora_inicio}–${h.hora_fin} (${h.dias_semana})`)
-                  .join(' | ')}
-          </p>
-        </div>
-      ))}
+      <div className="panel">
+        <h2>Niveles definidos</h2>
+        {niveles.length === 0 ? (
+          <p className="empty">Todavía no hay niveles.</p>
+        ) : (
+          niveles.map((n) => (
+            <article className="nivel" key={n.id}>
+              <h3>{n.nombre_nivel}</h3>
+              {n.descripcion ? <p>{n.descripcion}</p> : null}
+              <p>
+                <span className="nivel-k">Zonas</span>
+                {(n.zonas_detalle || []).map((z) => z.nombre_zona).join(', ') || 'ninguna'}
+              </p>
+              <p>
+                <span className="nivel-k">Horario</span>
+                {(n.horarios || []).length === 0
+                  ? '24/7'
+                  : n.horarios
+                      .map((h) => `${h.hora_inicio}–${h.hora_fin} (${h.dias_semana})`)
+                      .join(' · ')}
+              </p>
+            </article>
+          ))
+        )}
+      </div>
     </div>
   );
 }

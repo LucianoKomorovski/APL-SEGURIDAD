@@ -1,31 +1,39 @@
 import { useEffect, useState } from 'react';
 import { api, armarArbolZonas } from '../api';
+import EdificioSelect from '../EdificioSelect';
+import PageHead from '../PageHead';
 
-function Nodo({ zona }) {
+function agruparPorEdificio(raices) {
+  const grupos = new Map();
+  raices.forEach((zona) => {
+    const nombre = zona.edificio_nombre || 'Sin edificio';
+    if (!grupos.has(nombre)) grupos.set(nombre, []);
+    grupos.get(nombre).push(zona);
+  });
+  return [...grupos.entries()];
+}
+
+function Fila({ zona, depth }) {
   return (
-    <li>
-      <strong>{zona.nombre_zona}</strong>{' '}
-      <span className="badge badge-muted">{zona.nivel_seguridad}</span>
-      {zona.hijos?.length > 0 && (
-        <ul className="tree">
-          {zona.hijos.map((h) => (
-            <Nodo key={h.id} zona={h} />
-          ))}
-        </ul>
-      )}
-    </li>
+    <>
+      <div className="zona-row" style={{ '--depth': depth }}>
+        <span className="zona-nombre">{zona.nombre_zona}</span>
+        <span className="zona-nivel">{zona.nivel_seguridad}</span>
+      </div>
+      {zona.hijos?.map((hijo) => (
+        <Fila key={hijo.id} zona={hijo} depth={depth + 1} />
+      ))}
+    </>
   );
 }
 
-export default function Zonas() {
+export default function Zonas({ edificios, edificioId, onEdificio }) {
   const [zonas, setZonas] = useState([]);
-  const [edificios, setEdificios] = useState([]);
   const [puntos, setPuntos] = useState([]);
   const [zonaForm, setZonaForm] = useState({
     nombre_zona: '',
     nivel_seguridad: 'Media',
     zona_padre: '',
-    edificio: '',
   });
   const [puntoForm, setPuntoForm] = useState({
     descripcion: '',
@@ -36,21 +44,40 @@ export default function Zonas() {
   });
 
   const cargar = async () => {
-    const [z, e, p] = await Promise.all([
-      api.get('/zonas/'),
-      api.get('/edificios/'),
-      api.get('/puntos-acceso/'),
-    ]);
-    setZonas(Array.isArray(z) ? z : []);
-    setEdificios(Array.isArray(e) ? e : []);
+    if (!edificioId) return;
+    const q = `?edificio=${edificioId}`;
+    const [z, p] = await Promise.all([api.get(`/zonas/${q}`), api.get(`/puntos-acceso/${q}`)]);
+    const listaZonas = Array.isArray(z) ? z : [];
+    setZonas(listaZonas);
     setPuntos(Array.isArray(p) ? p : []);
-    setZonaForm((prev) => ({ ...prev, edificio: prev.edificio || e[0]?.id || '' }));
-    setPuntoForm((prev) => ({ ...prev, zona: prev.zona || z[0]?.id || '' }));
+    setPuntoForm((prev) => ({
+      ...prev,
+      zona: listaZonas.some((zona) => String(zona.id) === String(prev.zona))
+        ? prev.zona
+        : listaZonas[0]?.id || '',
+    }));
   };
 
   useEffect(() => {
-    cargar().catch((err) => alert(err.message));
-  }, []);
+    if (!edificioId) return undefined;
+    let activo = true;
+    const q = `?edificio=${edificioId}`;
+    Promise.all([api.get(`/zonas/${q}`), api.get(`/puntos-acceso/${q}`)]).then(([z, p]) => {
+      if (!activo) return;
+      const listaZonas = Array.isArray(z) ? z : [];
+      setZonas(listaZonas);
+      setPuntos(Array.isArray(p) ? p : []);
+      setPuntoForm((prev) => ({
+        ...prev,
+        zona: listaZonas.some((zona) => String(zona.id) === String(prev.zona))
+          ? prev.zona
+          : listaZonas[0]?.id || '',
+      }));
+    }).catch((err) => alert(err.message));
+    return () => {
+      activo = false;
+    };
+  }, [edificioId]);
 
   const crearZona = async (e) => {
     e.preventDefault();
@@ -58,7 +85,7 @@ export default function Zonas() {
       nombre_zona: zonaForm.nombre_zona,
       nivel_seguridad: zonaForm.nivel_seguridad,
       zona_padre: zonaForm.zona_padre ? Number(zonaForm.zona_padre) : null,
-      edificio: zonaForm.edificio ? Number(zonaForm.edificio) : null,
+      edificio: Number(edificioId),
     });
     setZonaForm((prev) => ({ ...prev, nombre_zona: '' }));
     await cargar();
@@ -75,18 +102,30 @@ export default function Zonas() {
     await cargar();
   };
 
-  const arbol = armarArbolZonas(zonas);
+  const grupos = agruparPorEdificio(armarArbolZonas(zonas));
 
   return (
     <div>
-      <h1>Zonas por edificio</h1>
+      <PageHead
+        kicker="Planta"
+        title="Zonas por edificio"
+        lede="Jerarquía de zonas y puntos de acceso de este edificio. Un padre cubre a las zonas que contiene."
+      />
+      <EdificioSelect edificios={edificios} edificioId={edificioId} onChange={onEdificio} />
       <div className="panel">
-        <h2>Árbol Composite</h2>
-        <ul className="tree">
-          {arbol.map((z) => (
-            <Nodo key={z.id} zona={z} />
-          ))}
-        </ul>
+        <h2>Mapa de planta</h2>
+        {grupos.length === 0 ? (
+          <p className="empty">Todavía no hay zonas.</p>
+        ) : (
+          grupos.map(([edificio, raices]) => (
+            <section key={edificio}>
+              <p className="planta-edificio">{edificio}</p>
+              {raices.map((zona) => (
+                <Fila key={zona.id} zona={zona} depth={0} />
+              ))}
+            </section>
+          ))
+        )}
       </div>
 
       <div className="panel">
@@ -125,20 +164,7 @@ export default function Zonas() {
               ))}
             </select>
           </label>
-          <label>
-            Edificio
-            <select
-              value={zonaForm.edificio}
-              onChange={(e) => setZonaForm({ ...zonaForm, edificio: e.target.value })}
-            >
-              {edificios.map((ed) => (
-                <option key={ed.id} value={ed.id}>
-                  {ed.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="btn btn-ok" type="submit">
+          <button className="btn btn-primary" type="submit">
             Crear zona
           </button>
         </form>
@@ -210,6 +236,13 @@ export default function Zonas() {
             </tr>
           </thead>
           <tbody>
+            {puntos.length === 0 ? (
+              <tr>
+                <td className="empty" colSpan="4">
+                  Todavía no hay puntos de acceso.
+                </td>
+              </tr>
+            ) : null}
             {puntos.map((p) => (
               <tr key={p.id}>
                 <td>{p.descripcion}</td>

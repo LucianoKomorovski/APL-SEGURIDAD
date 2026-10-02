@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { UserPlus } from 'lucide-react';
 import { api } from '../api';
+import EdificioSelect from '../EdificioSelect';
+import PageHead from '../PageHead';
 
 const FORM_VACIO = {
   nombre: '',
@@ -11,30 +12,42 @@ const FORM_VACIO = {
   edificio: '',
   nivel_acceso: '',
   estado: 'Activo',
-  estado_llave: 'Activa',
 };
 
-export default function Usuarios() {
+export default function Usuarios({ edificios, edificioId, onEdificio }) {
   const [sujetos, setSujetos] = useState([]);
-  const [edificios, setEdificios] = useState([]);
   const [niveles, setNiveles] = useState([]);
   const [form, setForm] = useState(FORM_VACIO);
   const [editandoId, setEditandoId] = useState(null);
+  const edificioActual = edificios.find((ed) => String(ed.id) === String(edificioId));
+  const formLimpio = () => ({ ...FORM_VACIO, edificio: edificioId });
 
   const cargar = async () => {
-    const [s, e, n] = await Promise.all([
-      api.get('/sujetos/'),
-      api.get('/edificios/'),
-      api.get('/niveles/'),
-    ]);
+    if (!edificioId) return;
+    const q = `?edificio=${edificioId}`;
+    const [s, n] = await Promise.all([api.get(`/sujetos/${q}`), api.get(`/niveles/${q}`)]);
     setSujetos(Array.isArray(s) ? s : []);
-    setEdificios(Array.isArray(e) ? e : []);
     setNiveles(Array.isArray(n) ? n : []);
   };
 
   useEffect(() => {
-    cargar().catch((err) => alert(err.message));
-  }, []);
+    if (!edificioId) return undefined;
+    let activo = true;
+    const q = `?edificio=${edificioId}`;
+    Promise.all([api.get(`/sujetos/${q}`), api.get(`/niveles/${q}`)]).then(([s, n]) => {
+      if (!activo) return;
+      setSujetos(Array.isArray(s) ? s : []);
+      setNiveles(Array.isArray(n) ? n : []);
+    }).catch((err) => alert(err.message));
+    return () => {
+      activo = false;
+    };
+  }, [edificioId]);
+
+  const cambiarEdificio = (valor) => {
+    if (!editandoId) setForm((prev) => ({ ...prev, edificio: valor }));
+    onEdificio(valor);
+  };
 
   const onChange = (campo) => (e) => setForm({ ...form, [campo]: e.target.value });
 
@@ -47,7 +60,6 @@ export default function Usuarios() {
     edificio: form.edificio ? Number(form.edificio) : null,
     nivel_acceso: form.nivel_acceso ? Number(form.nivel_acceso) : null,
     estado: form.estado,
-    estado_llave: form.estado_llave,
   });
 
   const guardar = async (e) => {
@@ -58,7 +70,7 @@ export default function Usuarios() {
       } else {
         await api.post('/sujetos/', payload());
       }
-      setForm(FORM_VACIO);
+      setForm(formLimpio());
       setEditandoId(null);
       await cargar();
     } catch (err) {
@@ -75,28 +87,23 @@ export default function Usuarios() {
       dni: String(s.dni),
       email: s.email,
       codigo_referencia: llave?.codigo_referencia || '',
-      edificio: s.edificio || '',
+      edificio: s.edificio ? String(s.edificio) : '',
       nivel_acceso: s.nivel_acceso || '',
       estado: s.estado || 'Activo',
-      estado_llave: llave?.estado || 'Activa',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const bloquearLlave = async (s) => {
-    const llave = (s.credenciales || [])[0];
-    if (!llave) return;
-    const nuevo = llave.estado === 'Bloqueada' ? 'Activa' : 'Bloqueada';
+  const cambiarEstadoLlave = async (llave, estado) => {
     try {
-      await api.patch(`/credenciales/${llave.id}/`, { estado: nuevo });
+      await api.patch(`/credenciales/${llave.id}/`, { estado });
       await cargar();
     } catch (err) {
       alert(err.message);
     }
   };
 
-  const borrarLlave = async (s) => {
-    const llave = (s.credenciales || [])[0];
+  const borrarLlave = async (llave) => {
     if (!llave) return;
     if (!confirm(`¿Borrar la llave ${llave.codigo_referencia}?`)) return;
     try {
@@ -113,7 +120,7 @@ export default function Usuarios() {
       await api.del(`/sujetos/${s.id}/`);
       if (editandoId === s.id) {
         setEditandoId(null);
-        setForm(FORM_VACIO);
+        setForm(formLimpio());
       }
       await cargar();
     } catch (err) {
@@ -123,14 +130,14 @@ export default function Usuarios() {
 
   return (
     <div>
-      <h1>ABM de clientes y llaves</h1>
-      <p style={{ color: '#64748b', marginTop: 0 }}>
-        Alta, modificación y baja de personas y de sus llaves magnéticas (código del llavero).
-      </p>
+      <PageHead
+        kicker="Padrón"
+        title="ABM de clientes y llaves"
+        lede="Alta de clientes y llaves, bloqueo y actualización de sus datos."
+      />
+      <EdificioSelect edificios={edificios} edificioId={edificioId} onChange={cambiarEdificio} />
       <div className="panel">
-        <h2>
-          <UserPlus size={18} /> {editandoId ? 'Modificar cliente' : 'Alta de cliente'}
-        </h2>
+        <h2>{editandoId ? 'Modificar cliente' : 'Alta de cliente'}</h2>
         <form className="form-grid" onSubmit={guardar}>
           <label>
             Nombre
@@ -158,14 +165,6 @@ export default function Usuarios() {
             />
           </label>
           <label>
-            Estado de la llave
-            <select value={form.estado_llave} onChange={onChange('estado_llave')}>
-              <option>Activa</option>
-              <option>Bloqueada</option>
-              <option>Vencida</option>
-            </select>
-          </label>
-          <label>
             Nivel
             <select value={form.nivel_acceso} onChange={onChange('nivel_acceso')}>
               <option value="">Sin nivel</option>
@@ -179,12 +178,8 @@ export default function Usuarios() {
           <label>
             Edificio
             <select value={form.edificio} onChange={onChange('edificio')}>
+              <option value={edificioId}>{edificioActual?.nombre || 'Este edificio'}</option>
               <option value="">Ninguno (técnico, todos los sitios)</option>
-              {edificios.map((ed) => (
-                <option key={ed.id} value={ed.id}>
-                  {ed.nombre}
-                </option>
-              ))}
             </select>
           </label>
           <label>
@@ -194,7 +189,7 @@ export default function Usuarios() {
               <option>Inactivo</option>
             </select>
           </label>
-          <button className="btn btn-ok" type="submit">
+          <button className="btn btn-primary" type="submit">
             {editandoId ? 'Guardar cambios' : 'Dar de alta'}
           </button>
           {editandoId && (
@@ -203,7 +198,7 @@ export default function Usuarios() {
               type="button"
               onClick={() => {
                 setEditandoId(null);
-                setForm(FORM_VACIO);
+                setForm(formLimpio());
               }}
             >
               Cancelar
@@ -226,41 +221,60 @@ export default function Usuarios() {
             </tr>
           </thead>
           <tbody>
-            {sujetos.map((s) => {
-              const llave = (s.credenciales || [])[0];
-              return (
-                <tr key={s.id}>
+            {sujetos.length === 0 ? (
+              <tr>
+                <td className="empty" colSpan="6">
+                  Todavía no hay clientes.
+                </td>
+              </tr>
+            ) : null}
+            {sujetos.flatMap((s) => {
+              const llaves = s.credenciales?.length ? s.credenciales : [null];
+              return llaves.map((llave) => (
+                <tr key={`${s.id}-${llave?.id || 'sin'}`}>
                   <td>
                     {s.nombre} {s.apellido}
                   </td>
                   <td>{s.dni}</td>
-                  <td>{s.edificio_nombre || 'Todos'}</td>
-                  <td>{llave?.codigo_referencia || '—'}</td>
+                  <td>{s.edificio_nombre || 'Todos los sitios'}</td>
+                  <td className="mono">{llave?.codigo_referencia || '—'}</td>
                   <td>
-                    <span
-                      className={
-                        llave?.estado === 'Activa' ? 'badge badge-ok' : 'badge badge-bad'
-                      }
-                    >
+                    <span className={llave?.estado === 'Activa' ? 'badge badge-ok' : 'badge badge-bad'}>
                       {llave?.estado || 'Sin llave'}
                     </span>
                   </td>
-                  <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button className="btn btn-primary" type="button" onClick={() => editar(s)}>
-                      Editar
-                    </button>
-                    <button className="btn btn-ghost" type="button" onClick={() => bloquearLlave(s)}>
-                      {llave?.estado === 'Bloqueada' ? 'Activar' : 'Bloquear'}
-                    </button>
-                    <button className="btn btn-ghost" type="button" onClick={() => borrarLlave(s)}>
-                      Borrar llave
-                    </button>
-                    <button className="btn btn-bad" type="button" onClick={() => borrarCliente(s)}>
-                      Baja
-                    </button>
+                  <td>
+                    <div className="actions">
+                      <button className="btn-text" type="button" onClick={() => editar(s)}>
+                        Editar
+                      </button>
+                      {llave && ['Activa', 'Bloqueada', 'Vencida'].includes(llave.estado) && (
+                        <>
+                          <button className="btn-text" type="button" onClick={() => cambiarEstadoLlave(llave, llave.estado === 'Activa' ? 'Bloqueada' : 'Activa')}>
+                            {llave.estado === 'Activa' ? 'Bloquear' : 'Activar'}
+                          </button>
+                          {llave.estado !== 'Vencida' && (
+                            <button className="btn-text" type="button" onClick={() => cambiarEstadoLlave(llave, 'Vencida')}>
+                              Marcar vencida
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {llave && ['Emitida', 'Repuesta'].includes(llave.estado) && (
+                        <span className="muted">Histórica · sin habilitación</span>
+                      )}
+                      {llave && (
+                        <button className="btn-text" type="button" onClick={() => borrarLlave(llave)}>
+                          Borrar llave
+                        </button>
+                      )}
+                      <button className="btn-text danger" type="button" onClick={() => borrarCliente(s)}>
+                        Baja
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              );
+              ));
             })}
           </tbody>
         </table>

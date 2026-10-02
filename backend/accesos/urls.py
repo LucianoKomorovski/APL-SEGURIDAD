@@ -8,14 +8,20 @@ from .views import (
     CredencialViewSet,
     EdificioViewSet,
     HorarioPermitidoViewSet,
+    IncidenteTecnicoViewSet,
     NivelAccesoViewSet,
+    OrdenIntervencionViewSet,
     PuntoAccesoViewSet,
     RegistroAccesoViewSet,
     SujetoAccesoViewSet,
+    TecnicoViewSet,
+    csrf_cookie,
     heartbeat_totem,
-    login_operador,
+    login_sistema,
+    logout_sistema,
     procesar_evento_hardware,
     procesar_lectura_totem,
+    usuario_actual,
 )
 
 router = DefaultRouter()
@@ -29,9 +35,15 @@ router.register(r'zonas', ComponenteZonaViewSet)
 router.register(r'horarios', HorarioPermitidoViewSet)
 router.register(r'controladores', ControladorAccesoViewSet)
 router.register(r'credenciales', CredencialViewSet)
+router.register(r'tecnicos', TecnicoViewSet)
+router.register(r'incidentes', IncidenteTecnicoViewSet)
+router.register(r'ordenes', OrdenIntervencionViewSet)
 
 urlpatterns = [
-    path('auth/login/', login_operador, name='login-operador'),
+    path('auth/csrf/', csrf_cookie, name='auth-csrf'),
+    path('auth/login/', login_sistema, name='auth-login'),
+    path('auth/logout/', logout_sistema, name='auth-logout'),
+    path('auth/me/', usuario_actual, name='auth-me'),
     path('totem/lectura/', procesar_lectura_totem, name='totem-lectura'),
     path('totem/evento/', procesar_evento_hardware, name='totem-evento'),
     path('totem/heartbeat/', heartbeat_totem, name='totem-heartbeat'),

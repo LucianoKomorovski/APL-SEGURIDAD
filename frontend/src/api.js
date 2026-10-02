@@ -1,34 +1,49 @@
 export const API = '/api';
 
+let onUnauthorized = () => {};
+
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
+}
+
+function cookie(nombre) {
+  const prefijo = `${nombre}=`;
+  const valor = document.cookie.split('; ').find((item) => item.startsWith(prefijo));
+  return valor ? decodeURIComponent(valor.slice(prefijo.length)) : '';
+}
+
 async function parseJson(res) {
+  if (res.status === 204) return null;
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = body.error || body.detail || body.motivo || JSON.stringify(body);
-    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    const error = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    error.status = res.status;
+    if (res.status === 401) onUnauthorized();
+    throw error;
   }
   return body;
 }
 
+function request(path, method = 'GET', data) {
+  const headers = { Accept: 'application/json' };
+  if (data !== undefined) headers['Content-Type'] = 'application/json';
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    headers['X-CSRFToken'] = cookie('csrftoken');
+  }
+  return fetch(`${API}${path}`, {
+    method,
+    credentials: 'same-origin',
+    headers,
+    body: data === undefined ? undefined : JSON.stringify(data),
+  }).then(parseJson);
+}
+
 export const api = {
-  get: (path) => fetch(`${API}${path}`).then(parseJson),
-  post: (path, data) =>
-    fetch(`${API}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(parseJson),
-  patch: (path, data) =>
-    fetch(`${API}${path}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(parseJson),
-  del: (path) =>
-    fetch(`${API}${path}`, { method: 'DELETE' }).then((res) => {
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-    }),
+  get: (path) => request(path),
+  post: (path, data) => request(path, 'POST', data),
+  patch: (path, data) => request(path, 'PATCH', data),
+  del: (path) => request(path, 'DELETE'),
 };
 
 export function formatFecha(valor) {
