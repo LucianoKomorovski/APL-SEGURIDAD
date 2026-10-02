@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, formatFecha } from '../api';
+import PageHead from '../PageHead';
 
 const TAGS = [
   ['TAG-PEL-01', 'Residente Pellegrini'],
@@ -51,11 +52,11 @@ export default function Simulador() {
 
   return (
     <div>
-      <h1>Tótem virtual</h1>
-      <p>
-        Cada tótem es de entrada o de salida. El guardia y la cámara están en el sitio;
-        acá se registra el pase de la llave magnética.
-      </p>
+      <PageHead
+        kicker="Simulación"
+        title="Tótem virtual"
+        lede="Cada tótem es de entrada o de salida. El guardia y la cámara están en el sitio; acá se registra el pase de la llave magnética."
+      />
       <div className="totem">
         <div className="panel">
           <h2>Lector</h2>
@@ -71,9 +72,9 @@ export default function Simulador() {
           </label>
           <label>
             Código
-            <input value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+            <input className="mono" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
           </label>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
+          <div className="btn-row">
             {TAGS.map(([tag, label]) => (
               <button
                 key={tag}
@@ -88,17 +89,17 @@ export default function Simulador() {
               </button>
             ))}
           </div>
-          <button className="btn btn-ok" type="button" onClick={() => leer()}>
+          <button className="btn btn-primary" type="button" onClick={() => leer()}>
             Pasar llave
           </button>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+          <div className="btn-row">
             <button className="btn btn-bad" type="button" onClick={() => evento('PUERTA_FORZADA')}>
               Puerta forzada
             </button>
             <button className="btn btn-ghost" type="button" onClick={() => evento('DESCONEXION')}>
               Desconectar
             </button>
-            <button className="btn btn-primary" type="button" onClick={() => evento('RECONEXION')}>
+            <button className="btn btn-ghost" type="button" onClick={() => evento('RECONEXION')}>
               Reconectar
             </button>
           </div>

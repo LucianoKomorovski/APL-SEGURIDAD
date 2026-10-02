@@ -42,6 +42,15 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accesos.authentication.ApiSessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'accesos.permissions.EsOperador',
+    ],
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware', 
@@ -121,3 +130,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Orígenes del frontend Vite durante el desarrollo local. Django valida el
+# encabezado Origin aun cuando la petición llegue a través del proxy de Vite.
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+]

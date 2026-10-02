@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>SGCA-APL — Trabajo de Diploma — Parcial N° I</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 15mm 18mm 15mm;
+    @bottom-center {
+      content: counter(page);
+      font-family: "DejaVu Sans", sans-serif;
+      font-size: 9pt;
+      color: #444;
+    }
+    @top-right {
+      content: "SGCA-APL  ·  Trabajo de Diploma  ·  Parcial I";
+      font-family: "DejaVu Sans", sans-serif;
+      font-size: 8pt;
+      color: #555;
+    }
+  }
+  @page :first {
+    margin-top: 14mm;
+    @top-right { content: none; }
+    @bottom-center { content: none; }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "DejaVu Serif", "Liberation Serif", serif;
+    font-size: 11pt;
+    line-height: 1.38;
+    color: #1c1c1c;
+  }
+  h1, h2, h3, h4 {
+    font-family: "DejaVu Sans", sans-serif;
+    line-height: 1.25;
+    page-break-after: avoid;
+  }
+  h1 { font-size: 16pt; margin: 1.1em 0 0.4em; }
+  h2 { font-size: 13pt; margin: 1em 0 0.35em; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
+  h3 { font-size: 11.5pt; margin: 0.85em 0 0.3em; }
+  h4 { font-size: 11pt; margin: 0.7em 0 0.25em; }
+  p { margin: 0.35em 0 0.55em; }
+  ul, ol { margin: 0.3em 0 0.6em; padding-left: 1.2em; }
+  li { margin: 0.15em 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.4em 0 0.8em;
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.3;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #b9b9b9;
+    padding: 4px 5px;
+    vertical-align: top;
+    text-align: left;
+  }
+  th { background: #eef2f6; font-weight: 700; }
+  .cover {
+    min-height: 250mm;
+    page-break-after: always;
+    text-align: center;
+    font-family: "DejaVu Sans", sans-serif;
+  }
+  .cover .uni { font-size: 13pt; letter-spacing: 0.04em; margin-top: 18mm; }
+  .cover .fac { font-size: 11pt; margin-top: 4mm; }
+  .cover .rule { width: 70%; margin: 10mm auto; border: 0; border-top: 1.5px solid #1c3f6e; }
+  .cover h1 {
+    border: 0;
+    font-size: 20pt;
+    margin: 8mm 12mm 3mm;
+    color: #1c3f6e;
+  }
+  .cover .sigla { font-size: 14pt; font-weight: 700; }
+  .cover .sub { font-size: 12pt; margin-top: 6mm; }
+  .cover .meta { margin-top: 16mm; text-align: left; display: inline-block; font-size: 11pt; line-height: 1.6; }
+  .cover .meta b { display: inline-block; width: 42mm; }
+  .small { font-size: 9.5pt; }
+  .note {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 9pt;
+    color: #333;
+    margin: 0.2em 0 0.6em;
+  }
+  figure {
+    margin: 0.4em 0 0.8em;
+    page-break-inside: avoid;
+  }
+  figcaption {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 9pt;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .box {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 9.5pt;
+    background: #f7f8fa;
+    border-left: 3px solid #1c3f6e;
+    padding: 6px 8px;
+    margin: 0.4em 0 0.7em;
+  }
+  a { color: inherit; text-decoration: none; }
+  .toc { font-family: "DejaVu Sans", sans-serif; font-size: 11pt; }
+  .toc a::after {
+    content: target-counter(attr(href), page);
+    float: right;
+  }
+  .toc li { margin: 0.28em 0; }
+  .paso td:first-child { width: 12mm; text-align: center; font-weight: 700; }
+  code, .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="uni">UNIVERSIDAD ABIERTA INTERAMERICANA</div>
+  <div class="fac">Facultad de Tecnología Informática<br>Ingeniería en Sistemas Informáticos</div>
+  <hr class="rule">
+  <div class="sub">Trabajo de Diploma<br>Evaluación parcial N° I</div>
+  <h1>Sistema de Gestión y Control de Accesos Físicos APL</h1>
+  <div class="sigla">SGCA-APL</div>
+  <div class="sub">Iteración 3 — Presencia en el edificio y ciclo de vida del llavero</div>
+  <div class="meta">
+    <div><b>Alumno</b> Komorovski, Luciano Jesus</div>
+    <div><b>Docente</b> Ing. Pablo Audoglio</div>
+    <div><b>Sede</b> Rosario</div>
+    <div><b>Localización</b> Lagos</div>
+    <div><b>Turno</b> Tarde</div>
+    <div><b>Modalidad</b> Individual</div>
+    <div><b>Fecha</b> 29 de septiembre de 2026</div>
+  </div>
+</section>
+
+<h1>Resumen ejecutivo</h1>
+<p>Este informe actualiza el acta del SGCA-APL, continuada desde Ingeniería de Software, y desarrolla la tercera iteración del producto. La iteración anterior ya validaba el pase por credencial, edificio, zona y horario, y dejaba auditoría y alertas. Esta entrega interviene dos gestiones que seguían abiertas: saber quién permanece en cada edificio, con reglas de entrada y salida coherentes, y administrar el llavero desde que se emite hasta que se repone, sin reactivar un código perdido o reemplazado.</p>
+<p>El documento cubre el acta del proyecto, los requerimientos, las minutas, los prototipos y, para el conjunto de requerimientos núcleo de la iteración, los procesos de negocio, los diagramas de actividad y de estados, los casos de uso, el modelo de dominio y el diseño preliminar. La versión ejecutable de estas reglas ya corre en el panel del operador.</p>
+
+<h1>Índice</h1>
+<ol class="toc">
+  <li><a href="#s1">Acta de constitución del proyecto</a></li>
+  <li><a href="#s11">Definición de requerimientos</a></li>
+  <li><a href="#s12">Iteraciones del proyecto</a></li>
+  <li><a href="#s13">Hoja de seguimiento</a></li>
+</ol>
+
+<h1 id="s1">1. Acta de constitución del proyecto</h1>
+
+<h2>1.1 Nombre del proyecto</h2>
+<p>Sistema de Gestión y Control de Accesos Físicos APL.</p>
+
+<h2>1.2 Siglas del proyecto</h2>
+<p>SGCA-APL.</p>
+
+<h2>1.3 Descripción del proyecto</h2>
+<p>El SGCA-APL informatiza el control de acceso físico de los edificios que administra APL en Rosario: consorcios, oficinas y depósitos. El negocio es la guardia de puerta y la custodia de los llaveros. Hay que decidir si una persona puede pasar, dejar constancia de cada intento y saber quién permanece adentro.</p>
+<p>El trabajo empezó en Ingeniería de Software. Esa etapa dejó la validación por credencial, edificio, zona y horario, con auditoría y alertas. Esta primera entrega de Trabajo de Diploma, en el segundo cuatrimestre de 2026, interviene dos gestiones que seguían abiertas. La guardia necesita que una persona no vuelva a entrar al mismo edificio sin haber salido, que no salga si no hay una entrada abierta, y que el operador se entere si alguien supera el tiempo máximo de permanencia. La administración del llavero necesita un ciclo: se emite, se entrega y solo entonces habilita; la pérdida, el vencimiento y la reposición no se resuelven reactivando el código anterior.</p>
+<p>El plan de esta iteración incluye el relevamiento de esas reglas, los artefactos de análisis y una versión ejecutable del panel. Visitas, presentismo y cámaras quedan fuera.</p>
+<h2>1.4 Objetivos del proyecto</h2>
+<h3>Objetivo general</h3>
+<p>Consolidar, antes del 15 de diciembre de 2026, el control de acceso físico de los edificios administrados por APL, de modo que la organización audite cada intento de ingreso y pueda determinar quién permanece en cada edificio y en qué condición está habilitada cada persona para pasar.</p>
+<p>La necesidad que lo justifica es operativa: la guardia de los edificios clientes no puede reconstruir, con planillas o con la memoria del puesto, si alguien entró dos veces o si un llavero perdido sigue habilitando. La información que la organización requiere es el padrón de habilitados, el resultado de cada pase y la presencia vigente por edificio.</p>
+
+<h3>Objetivos específicos</h3>
+<ul>
+  <li>Registrar la totalidad de los intentos de acceso de los edificios en prueba, concedidos y denegados, con momento, lugar y motivo, verificable al cierre de cada iteración.</li>
+  <li>Determinar, para cada edificio, si una persona está afuera, adentro o con permanencia excedida, con una actualización inferior a cinco segundos respecto del pase en puerta, evaluado en la demostración de esta iteración.</li>
+  <li>Impedir que una credencial no entregada, bloqueada por pérdida o ya reemplazada habilite un ingreso, verificado sobre los casos del padrón antes del 30 de octubre de 2026.</li>
+  <li>Cerrar la atención de las alertas por acceso irregular, de modo que en el turno se distinga lo pendiente de lo resuelto.</li>
+</ul>
+<h2>1.5 Alcance</h2>
+<p>APL custodia el ingreso a edificios de terceros. Una persona habilitada se presenta con un llavero. La guardia deja pasar o niega el paso según la habilitación vigente, el lugar y el momento, y necesita saber quién sigue adentro. La administración entrega, bloquea y repone llaveros. El producto cubre esas gestiones para varios edificios desde un mismo puesto de operador. No liquida jornales ni reemplaza a la guardia en la puerta.</p>
+<h3>Inclusiones</h3>
+<ul>
+  <li>Padrón de personas habilitadas, asociado a un edificio o, en el caso del personal de servicio, sin edificio fijo.</li>
+  <li>Custodia del llavero: emisión, entrega, pérdida, vencimiento y reposición.</li>
+  <li>Decisión de pase según credencial, edificio, zona y horario, ya construida en la iteración anterior y vigente.</li>
+  <li>Presencia por edificio: quedar adentro al entrar, quedar afuera al salir por cualquier acceso del mismo edificio, e impedir el pase incoherente.</li>
+  <li>Aviso al operador cuando la permanencia supera el máximo del edificio.</li>
+  <li>Constancia de cada intento y atención de las alertas del turno.</li>
+</ul>
+<h3>Exclusiones</h3>
+<ul>
+  <li>Visitas de terceros con credencial temporaria. Queda planteada para una iteración posterior.</li>
+  <li>Liquidación de sueldos o cómputo de horas trabajadas. El sistema registra el paso, no el presentismo.</li>
+  <li>Videovigilancia. La cámara del tótem se reconoce como parte del puesto, sin integrar imágenes.</li>
+  <li>Cupo de personas por zona y permisos temporarios fuera del nivel habitual.</li>
+  <li>Puesta en una controladora de producción. La prueba de esta iteración usa el tótem de demostración, con el mismo intercambio que tendría el puesto real.</li>
+</ul>
+
+<h2>1.6 Registro de interesados</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Interesado</th>
+      <th>Organización y lugar</th>
+      <th>Rol</th>
+      <th>Influencia</th>
+      <th>Fase de mayor interés</th>
+      <th>Clasificación</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Alejandro<br><span class="small">Expectativa: que la guardia de los edificios clientes audite cada pase y sepa quién permanece adentro, sin planillas paralelas.</span></td>
+      <td>APL, Rosario</td>
+      <td>Sponsor y cliente</td>
+      <td>Alta</td>
+      <td>Requisitos y cierre de cuatrimestre</td>
+      <td>Externo al equipo de desarrollo. Interno a APL. Apoyo.</td>
+    </tr>
+    <tr>
+      <td>Lucía<br><span class="small">Expectativa: ver en el turno quién está dentro y atender la alerta sin recorrer los edificios.</span></td>
+      <td>APL, Rosario</td>
+      <td>Operadora de monitoreo. Usuaria del puesto.</td>
+      <td>Media</td>
+      <td>Prueba del panel y operación</td>
+      <td>Externa al equipo. Interna a APL. Apoyo.</td>
+    </tr>
+    <tr>
+      <td>Administración de sistemas de APL<br><span class="small">Expectativa: un producto mantenible, sin licencias de pago, desplegable en la infraestructura que la empresa ya usa.</span></td>
+      <td>APL, Rosario</td>
+      <td>Responsable técnico del cliente</td>
+      <td>Alta</td>
+      <td>Arquitectura y mantenimiento</td>
+      <td>Externo al equipo. Interno a APL. Neutral: condiciona el apoyo a que no haya costo de licencias ni hardware nuevo en esta etapa.</td>
+    </tr>
+    <tr>
+      <td>Ing. Pablo Audoglio<br><span class="small">Expectativa: un proyecto continuo, con reglas de negocio explícitas y artefactos legibles.</span></td>
+      <td>UAI, sede Rosario, Lagos</td>
+      <td>Docente evaluador</td>
+      <td>Alta</td>
+      <td>Cada entrega parcial</td>
+      <td>Externo a APL y al equipo de construcción. Apoyo.</td>
+    </tr>
+    <tr>
+      <td>Luciano Jesus Komorovski<br><span class="small">Expectativa: cerrar esta iteración con una versión demostrable antes de la fecha de entrega.</span></td>
+      <td>UAI, Rosario</td>
+      <td>Analista, diseñador y constructor. Único integrante del equipo.</td>
+      <td>Alta</td>
+      <td>Toda la iteración</td>
+      <td>Interno al proyecto. Apoyo.</td>
+    </tr>
+  </tbody>
+</table>
+<p class="note">No hay opositores identificados. El único interesado neutral es la administración de sistemas de APL, mientras el alcance no pida hardware de producción ni software privativo.</p>
+
+<h2>1.7 Cronograma de hitos</h2>
+<p>El proyecto se conduce por iteraciones. Cada una produce una versión ejecutable de un conjunto de requerimientos. Las dos primeras corresponden a Ingeniería de Software y ya fueron entregadas. Esta entrega es la tercera.</p>
+<table>
+  <thead>
+    <tr><th>Hito</th><th>Iteración y entregable</th><th>Fecha</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>H1</td><td>Iteración 1. Relevamiento, acta y diseño preliminar del acceso.</td><td>Mayo 2026</td><td>Entregado. Parcial I de Ingeniería de Software, con devolución el 02/06.</td></tr>
+    <tr><td>H2</td><td>Iteración 2. Validación de acceso por credencial, edificio, zona y horario. Diseño detallado, modelo de datos y versión ejecutable. Auditoría y alertas.</td><td>Julio 2026</td><td>Entregado el 07/07. Parcial II de Ingeniería de Software.</td></tr>
+    <tr><td>H3</td><td>Iteración 3. Presencia por edificio y ciclo del llavero. Análisis, diseño preliminar y versión ejecutable. Este informe.</td><td>29/09/2026</td><td>Esta entrega. Parcial I de Trabajo de Diploma.</td></tr>
+    <tr><td>H4</td><td>Iteración 4. Visitas con credencial temporaria. Análisis y versión ejecutable.</td><td>Noviembre 2026</td><td>Planificada. Hoy está en las exclusiones.</td></tr>
+    <tr><td>H5</td><td>Cierre de diploma. Integración de las iteraciones y demostración final al cliente y al docente.</td><td>15/12/2026</td><td>Planificado. Coincide con el plazo del objetivo general.</td></tr>
+  </tbody>
+</table>
+
+<h3>Esfuerzo y costo de la iteración 3</h3>
+<table>
+  <thead><tr><th>Concepto</th><th>Estimación</th></tr></thead>
+  <tbody>
+    <tr><td>Relevamiento, minuta y especificación</td><td>10 horas</td></tr>
+    <tr><td>Modelo, casos de uso y diagramas</td><td>12 horas</td></tr>
+    <tr><td>Construcción de la versión ejecutable y pruebas</td><td>24 horas</td></tr>
+    <tr><td>Informe de la entrega</td><td>8 horas</td></tr>
+    <tr><td>Total de la iteración</td><td>54 horas de una sola persona</td></tr>
+    <tr><td>Licencias e infraestructura</td><td>Costo monetario nulo. Herramientas de uso libre y equipo propio.</td></tr>
+  </tbody>
+</table>
+
+<h2>1.8 Criterios de aceptación del producto</h2>
+<p>El cliente acepta la iteración 3 si, en la demostración, se cumplen estos resultados. Los tres primeros vienen de la iteración 2 y siguen vigentes.</p>
+<ul>
+  <li>Un pase se resuelve en menos de 1,5 segundos.</li>
+  <li>El 100 % de los intentos queda asentado, concedido o denegado, con motivo cuando no hay paso.</li>
+  <li>El operador distingue alertas pendientes de resueltas y puede cerrarlas con una observación.</li>
+  <li>Con una presencia abierta en un edificio, una nueva entrada en ese edificio se niega. El motivo es que la persona ya se encuentra dentro. Se genera alerta.</li>
+  <li>Una salida sin entrada abierta en ese edificio se niega. El motivo es salida sin entrada. Se genera alerta.</li>
+  <li>Entrar por un acceso y salir por otro del mismo edificio cierra la presencia.</li>
+  <li>Una persona sin edificio fijo puede estar adentro en dos edificios a la vez. La regla se evalúa por edificio.</li>
+  <li>Si la permanencia supera el máximo del edificio, el estado pasa a permanencia excedida y hay una sola alerta. La salida posterior se concede.</li>
+  <li>Una credencial recién emitida no habilita el paso. Después de la entrega, sí, si el resto de las reglas se cumple.</li>
+  <li>Declarar la pérdida exige un motivo. Ese código no vuelve a activarse por una corrección directa.</li>
+  <li>Reponer deja el código anterior inutilizable y crea uno nuevo, todavía sin entregar.</li>
+  <li>No hay dos credenciales activas del mismo tipo para la misma persona. Una peatonal y una de cochera sí conviven.</li>
+  <li>El operador localiza en el panel, sin recorrer un listado de históricos, quién está dentro de cada edificio.</li>
+</ul>
+
+<h2>1.9 Supuestos</h2>
+<ul>
+  <li>APL sigue siendo la organización cliente del caso, y los edificios del ensayo son de sus clientes, no una sede interna de la empresa.</li>
+  <li>El máximo de permanencia lo define cada edificio. Doce horas es el valor de referencia mientras el cliente no indique otro.</li>
+  <li>La persona de servicio sin edificio asignado está autorizada a circular por los edificios de su nivel. Su presencia se cuenta por separado en cada uno.</li>
+  <li>En la puerta hay un guardia. El tótem no reemplaza esa presencia humana.</li>
+  <li>El operador del turno sabe usar un navegador.</li>
+  <li>Cuando exista controladora de producción, aceptará el mismo intercambio de lectura que el tótem de prueba.</li>
+</ul>
+
+<h2>1.10 Restricciones</h2>
+<ul>
+  <li>De tiempo: esta iteración se entrega el 29 de septiembre de 2026. El objetivo general se evalúa el 15 de diciembre de 2026.</li>
+  <li>De equipo: el proyecto lo construye una sola persona, que cubre análisis, diseño, construcción y prueba.</li>
+  <li>De costo: no hay presupuesto de licencias ni de hardware nuevo.</li>
+  <li>De continuidad: edificio, zona, nivel, horario y la validación de la iteración 2 no se reemplazan. Esta iteración los usa.</li>
+  <li>De ensayo: no hay controladora física de producción en el laboratorio. La demostración es con el tótem virtual.</li>
+  <li>De legado: la devolución del 02/06/2026 ya fue incorporada en el Parcial II. Este informe no reabre ese diseño detallado.</li>
+</ul>
+
+<h3>Riesgos de la iteración</h3>
+<table>
+  <thead><tr><th>Riesgo</th><th>Efecto</th><th>Respuesta</th></tr></thead>
+  <tbody>
+    <tr><td>El máximo de permanencia es demasiado corto para un consorcio.</td><td>Alertas que la guardia deja de mirar.</td><td>El máximo es un dato del edificio, no una constante del producto. En la demo son 12 horas.</td></tr>
+    <tr><td>El operador corrige el estado del llavero a mano y reactiva un código perdido.</td><td>Un llavero denunciado vuelve a abrir.</td><td>El cambio de estado solo ocurre por las transiciones definidas. Una corrección directa se rechaza.</td></tr>
+    <tr><td>La prueba sin hardware esconde un desacuerdo con la controladora real.</td><td>La iteración 4 de integración se atrasa.</td><td>El tótem de prueba usa el mismo intercambio previsto para el puesto. La controladora real sigue fuera de esta entrega.</td></tr>
+  </tbody>
+</table>
+
+<h1 id="s11">2. Definición de requerimientos</h1>
+<p>Corresponde al punto 11 de la guía. Incluye minutas, prototipos y especificación.</p>
+
+<h2>2.1 Minutas de reunión</h2>
+<h3>Minuta 1 — Relevamiento de la iteración 3</h3>
+<table>
+  <tbody>
+    <tr><th>Fecha y lugar</th><td>16 de septiembre de 2026, Rosario.</td></tr>
+    <tr><th>Participantes</th><td>Alejandro (cliente), Lucía (operadora), Luciano Komorovski (analista).</td></tr>
+    <tr><th>Motivo</th><td>Definir qué gestiones de la guardia y del padrón quedan abiertas después del Parcial II.</td></tr>
+  </tbody>
+</table>
+<p><b>Temas.</b> Alejandro describe que en los consorcios una misma persona pasa el llavero de entrada más de una vez y la guardia no tiene una lista confiable de quién está adentro. Lucía pide ver esa lista en el puesto, no reconstruirla con el historial. También pide un aviso si alguien permanece más del máximo del edificio, sin que ese aviso le impida salir. Sobre los llaveros, la administración hoy puede volver a activar un código denunciado como perdido. Acuerdan que la pérdida se cierra emitiendo otro llavero, y que el nuevo no habilita hasta que se entrega en mano. La cochera puede tener su propio llavero además del peatonal.</p>
+<p><b>Decisiones.</b> La presencia es por persona y por edificio. Salir por otro acceso del mismo edificio cierra la entrada. Una persona de servicio puede estar adentro en dos edificios. El alta del llavero no habilita el paso. No se reactiva un código bloqueado. Una peatonal activa y una de cochera activa pueden convivir. Las visitas de terceros no entran en esta iteración.</p>
+<p><b>Pendiente.</b> Confirmar con cada edificio el máximo de permanencia. Mientras tanto, doce horas.</p>
+
+<h3>Minuta 2 — Revisión de la versión ejecutable</h3>
+<table>
+  <tbody>
+    <tr><th>Fecha y lugar</th><td>29 de septiembre de 2026, Rosario.</td></tr>
+    <tr><th>Participantes</th><td>Lucía (operadora), Luciano Komorovski (constructor).</td></tr>
+    <tr><th>Motivo</th><td>Recorrer el panel con los criterios de aceptación de la iteración.</td></tr>
+  </tbody>
+</table>
+<p><b>Recorrido.</b> En el puesto en vivo, María Gómez figura dentro del Consorcio Pellegrini. Un segundo pase de su llavero en la entrada se niega. En el padrón, el llavero emitido ofrece la entrega y no un cambio libre de estado. Lucía considera legible la lista de quién está dentro y entiende que la pérdida pide un motivo.</p>
+<p><b>Decisión.</b> La iteración se da por demostrada para esta entrega. El máximo de doce horas se mantiene como referencia.</p>
+
+<h2>2.2 Prototipos de interfaz</h2>
+<p>El guion completo de la iteración está en el apartado 12.2. Aquí se fijan las tres pantallas que la operadora recorre.</p>
+
+<figure>
+  <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <rect x="1" y="1" width="718" height="248" fill="#f4f6f8" stroke="#9aa"/>
+    <rect x="8" y="8" width="130" height="234" fill="#1c3f6e"/>
+    <text x="20" y="32" fill="#fff" font-size="13">SGCA-APL</text>
+    <text x="20" y="62" fill="#d6e4f5" font-size="11">En vivo</text>
+    <text x="20" y="84" fill="#9bb" font-size="11">Clientes y llaves</text>
+    <text x="20" y="106" fill="#9bb" font-size="11">Auditoría</text>
+    <text x="18" y="220" fill="#d6e4f5" font-size="10">Lucía · Tarde</text>
+    <text x="150" y="28" fill="#1c3f6e" font-size="14" font-weight="700">Entradas y salidas en vivo</text>
+    <rect x="150" y="40" width="120" height="42" fill="#fff" stroke="#ccd"/>
+    <text x="158" y="56" font-size="9" fill="#555">Dentro ahora</text>
+    <text x="158" y="74" font-size="14" font-weight="700">1</text>
+    <rect x="278" y="40" width="120" height="42" fill="#fff" stroke="#ccd"/>
+    <text x="286" y="56" font-size="9" fill="#555">Denegados</text>
+    <text x="286" y="74" font-size="14" font-weight="700">0</text>
+    <rect x="150" y="92" width="548" height="140" fill="#fff" stroke="#ccd"/>
+    <text x="160" y="112" font-size="12" font-weight="700">Dentro ahora</text>
+    <text x="160" y="136" font-size="10" fill="#333">María Gómez   TAG-PEL-01   Consorcio Pellegrini   61 min   Dentro</text>
+    <text x="160" y="160" font-size="10" fill="#777">La salida por otro tótem del mismo edificio cierra esta fila.</text>
+  </svg>
+  <figcaption>Figura 1. Puesto en vivo. La métrica y la tabla muestran la presencia abierta, sin reconstruirla desde el historial.</figcaption>
+</figure>
+
+<figure>
+  <svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <rect x="1" y="1" width="718" height="228" fill="#f4f6f8" stroke="#9aa"/>
+    <text x="16" y="26" fill="#1c3f6e" font-size="14" font-weight="700">ABM de clientes y llaves</text>
+    <text x="16" y="46" font-size="10" fill="#444">El alta deja la llave emitida. El estado no se elige en un combo.</text>
+    <rect x="16" y="58" width="688" height="158" fill="#fff" stroke="#ccd"/>
+    <text x="28" y="80" font-size="11" font-weight="700">Padrón</text>
+    <text x="28" y="108" font-size="10">Ana Emitida · TAG-EMI-01 · Emitida</text>
+    <rect x="430" y="94" width="78" height="20" rx="3" fill="#1c3f6e"/>
+    <text x="444" y="108" font-size="10" fill="#fff">Entregar</text>
+    <text x="28" y="142" font-size="10">María Gómez · TAG-PEL-01 · Activa</text>
+    <text x="360" y="142" font-size="10" fill="#1c3f6e">Declarar pérdida · Marcar vencida · Reponer</text>
+    <text x="28" y="176" font-size="10">Jorge Repuesto · TAG-REP-01 · Repuesta</text>
+    <text x="400" y="176" font-size="10" fill="#777">Sin acciones de reactivación</text>
+    <text x="28" y="200" font-size="10">Jorge Repuesto · TAG-NUEVA-01 · Emitida · reemplaza a TAG-REP-01</text>
+  </svg>
+  <figcaption>Figura 2. Padrón. Cada llavero muestra solo la acción que su estado permite.</figcaption>
+</figure>
+
+<figure>
+  <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <rect x="1" y="1" width="718" height="148" fill="#f4f6f8" stroke="#9aa"/>
+    <text x="16" y="26" fill="#1c3f6e" font-size="14" font-weight="700">Tótem de prueba — Pellegrini entrada</text>
+    <text x="16" y="52" font-size="11">Lectura TAG-PEL-01</text>
+    <text x="16" y="78" font-size="12" fill="#8a1f1f" font-weight="700">ROJO · ya se encuentra dentro</text>
+    <text x="16" y="104" font-size="11">Lectura TAG-EMI-01</text>
+    <text x="16" y="128" font-size="12" fill="#8a1f1f" font-weight="700">ROJO · credencial sin entregar</text>
+  </svg>
+  <figcaption>Figura 3. Tótem. El motivo del rechazo es el mismo que ve el operador en la auditoría.</figcaption>
+</figure>
+
+<h2>2.3 Especificación de requerimientos</h2>
+<p>RF01 a RF04 fueron especificados y construidos en la iteración 2. Se mantienen. RF05 a RF07 son el conjunto núcleo de esta iteración y se detallan en el apartado 12.</p>
+<table>
+  <thead><tr><th>Id</th><th>Requerimiento</th><th>Iteración</th><th>Objetivo que satisface</th></tr></thead>
+  <tbody>
+    <tr><td>RF01</td><td>Decidir el pase según credencial, edificio, zona y horario.</td><td>2, vigente</td><td>General, de forma parcial</td></tr>
+    <tr><td>RF02</td><td>Asentar cada intento con momento, lugar, credencial, sentido y motivo.</td><td>2, vigente</td><td>Específico 1</td></tr>
+    <tr><td>RF03</td><td>Generar alerta ante pase denegado, puerta forzada o desconexión.</td><td>2, vigente</td><td>Específico 4, de forma parcial</td></tr>
+    <tr><td>RF04</td><td>El operador ve las alertas pendientes y las cierra con una observación.</td><td>2, vigente</td><td>Específico 4</td></tr>
+    <tr><td>RF05</td><td>Mantener la presencia por persona y edificio, y negar la entrada duplicada o la salida sin entrada.</td><td>3</td><td>Específico 2</td></tr>
+    <tr><td>RF06</td><td>Pasar a permanencia excedida al superar el máximo del edificio y alertar una sola vez, sin impedir la salida.</td><td>3</td><td>Específico 2</td></tr>
+    <tr><td>RF07</td><td>Recorrer el ciclo del llavero: emitir, entregar, declarar pérdida, vencer y reponer, con una sola credencial activa por tipo.</td><td>3</td><td>Específico 3</td></tr>
+  </tbody>
+</table>
+<h3>Requerimientos no funcionales que condicionan la iteración</h3>
+<ul>
+  <li>RNF01. El pase, incluida la regla de presencia, se resuelve en menos de 1,5 segundos.</li>
+  <li>RNF02. La lista de quién está dentro se actualiza en el puesto en menos de cinco segundos.</li>
+  <li>RNF03. Un cambio de estado del llavero queda asentado con origen, destino, motivo y momento. No se pierde al corregir un formulario.</li>
+</ul>
+
+<h1 id="s12">3. Iteraciones del proyecto</h1>
+<p>Corresponde al punto 12 de la guía. La construcción es iterativa e incremental. Cada iteración dura un tramo acotado, atiende un conjunto de requerimientos y deja una versión ejecutable.</p>
+<table>
+  <thead><tr><th>Iteración</th><th>Requerimientos</th><th>Resultado</th></tr></thead>
+  <tbody>
+    <tr><td>1. Mayo 2026</td><td>Acta, relevamiento y diseño preliminar del acceso.</td><td>Informe del Parcial I de Ingeniería de Software. Devolución del docente el 02/06.</td></tr>
+    <tr><td>2. Junio–julio 2026</td><td>RF01 a RF04. Validar el acceso físico.</td><td>Versión ejecutable entregada el 07/07, con diagramas de secuencia, clases y datos.</td></tr>
+    <tr><td>3. Septiembre 2026</td><td>RF05, RF06 y RF07. Presencia y ciclo del llavero.</td><td>Esta entrega. Versión ejecutable demostrada el 29/09.</td></tr>
+    <tr><td>4. Octubre–noviembre 2026</td><td>Visitas con credencial temporaria. Hoy está excluida.</td><td>Planificada.</td></tr>
+  </tbody>
+</table>
+<p>Los artefactos que siguen son los de la iteración 3. El requerimiento núcleo es el conjunto RF05–RF07: no es un alta simple, tiene reglas de negocio y satisface los objetivos específicos 2 y 3. Los procesos se describen como los vive la organización. El producto los interviene; no es el proceso.</p>
+
+<h2>3.1 Procesos de negocio</h2>
+<h3>Proceso A. Control de quién permanece en el edificio</h3>
+<p>La guardia de APL, en la puerta de un edificio cliente, deja entrar y salir a las personas habilitadas y debe poder decir, en cualquier momento del turno, quién está adentro. El valor para la organización es responder ante un incidente sin reconstruir el día con planillas. El proceso empieza cuando la persona se presenta en un acceso y termina cuando queda adentro, cuando queda afuera, o cuando el paso se niega. Mientras permanece, la organización vigila que no supere el máximo acordado con ese edificio. Superarlo avisa al operador. No convierte la salida en una falta: la persona tiene que poder irse.</p>
+<p>La coherencia del proceso es por edificio. Entrar por el hall y salir por otro acceso del mismo consorcio es un solo par entrada-salida. Estar adentro en Pellegrini no dice nada de Oficinas. El personal de servicio, que no pertenece a un solo edificio, puede estar adentro en más de un sitio.</p>
+
+<h3>Proceso B. Custodia del llavero</h3>
+<p>La administración habilita a una persona y le entrega un llavero. El valor es que solo circule quien recibió el elemento en mano, y que un llavero perdido o vencido deje de abrir sin depender de que alguien se acuerde de desactivarlo. El proceso empieza con la emisión, que todavía no habilita el paso, y sigue con la entrega. Después puede cortarse por pérdida, por vencimiento o por reposición. La reposición no revive el código viejo: lo deja inutilizable y empieza de nuevo, con un código nuevo que también debe entregarse. Un llavero de cochera no compite con el peatonal. Dos peatonales habilitados a la vez, sí.</p>
+
+<h2>3.2 Diagrama de actividad</h2>
+<figure>
+  <svg viewBox="0 0 700 640" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <defs>
+      <marker id="flecha" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#222"/>
+      </marker>
+    </defs>
+    <rect x="8" y="8" width="330" height="624" fill="#f7f9fc" stroke="#c5d0dc"/>
+    <rect x="350" y="8" width="342" height="624" fill="#f6faf6" stroke="#c9d8cc"/>
+    <rect x="8" y="8" width="330" height="22" fill="#1c3f6e"/>
+    <text x="173" y="23" text-anchor="middle" fill="#fff" font-size="11">En la puerta</text>
+    <rect x="350" y="8" width="342" height="22" fill="#3d5a40"/>
+    <text x="521" y="23" text-anchor="middle" fill="#fff" font-size="11">Resultado para el operador</text>
+
+    <circle cx="173" cy="46" r="7" fill="#222"/>
+    <line x1="173" y1="53" x2="173" y2="64" stroke="#222" marker-end="url(#flecha)"/>
+    <rect x="48" y="64" width="250" height="32" rx="8" fill="#fff" stroke="#333"/>
+    <text x="173" y="84" text-anchor="middle" font-size="11">La persona se presenta en un acceso</text>
+    <line x1="173" y1="96" x2="173" y2="108" stroke="#222" marker-end="url(#flecha)"/>
+    <rect x="48" y="108" width="250" height="32" rx="8" fill="#fff" stroke="#333"/>
+    <text x="173" y="128" text-anchor="middle" font-size="11">El guardia lee el llavero</text>
+    <line x1="173" y1="140" x2="173" y2="158" stroke="#222" marker-end="url(#flecha)"/>
+    <polygon points="173,158 268,196 173,234 78,196" fill="#fff" stroke="#333"/>
+    <text x="173" y="192" text-anchor="middle" font-size="10">¿Habilitada para</text>
+    <text x="173" y="206" text-anchor="middle" font-size="10">lugar y horario?</text>
+    <line x1="268" y1="196" x2="390" y2="196" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="300" y="188" font-size="10">No</text>
+    <rect x="390" y="174" width="270" height="44" rx="6" fill="#fff" stroke="#333"/>
+    <text x="525" y="192" text-anchor="middle" font-size="10">Se niega el paso y queda constancia.</text>
+    <text x="525" y="206" text-anchor="middle" font-size="10">El operador ve la alerta.</text>
+
+    <line x1="173" y1="234" x2="173" y2="252" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="180" y="248" font-size="10">Sí</text>
+    <polygon points="173,252 268,290 173,328 78,290" fill="#fff" stroke="#333"/>
+    <text x="173" y="286" text-anchor="middle" font-size="10">¿El acceso es</text>
+    <text x="173" y="300" text-anchor="middle" font-size="10">de entrada?</text>
+
+    <line x1="173" y1="328" x2="173" y2="346" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="180" y="342" font-size="10">Sí</text>
+    <polygon points="173,346 278,384 173,422 68,384" fill="#fff" stroke="#333"/>
+    <text x="173" y="380" text-anchor="middle" font-size="10">¿Ya está dentro</text>
+    <text x="173" y="394" text-anchor="middle" font-size="10">de este edificio?</text>
+    <line x1="278" y1="384" x2="390" y2="300" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="300" y="360" font-size="10">Sí</text>
+    <rect x="390" y="276" width="270" height="44" rx="6" fill="#fff" stroke="#333"/>
+    <text x="525" y="294" text-anchor="middle" font-size="10">Se niega: ya se encuentra dentro.</text>
+    <text x="525" y="308" text-anchor="middle" font-size="10">Hay alerta. Sigue dentro.</text>
+
+    <line x1="173" y1="422" x2="173" y2="440" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="180" y="436" font-size="10">No</text>
+    <rect x="48" y="440" width="250" height="36" rx="8" fill="#fff" stroke="#333"/>
+    <text x="173" y="456" text-anchor="middle" font-size="10">Queda dentro. Se permite el paso.</text>
+    <text x="173" y="470" text-anchor="middle" font-size="10">Fin de este pase.</text>
+
+    <path d="M78 290 H40 V500 H78" fill="none" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="14" y="400" font-size="10" transform="rotate(-90 14 400)">No, es salida</text>
+    <polygon points="173,500 278,538 173,576 68,538" fill="#fff" stroke="#333"/>
+    <text x="173" y="534" text-anchor="middle" font-size="10">¿Hay entrada abierta</text>
+    <text x="173" y="548" text-anchor="middle" font-size="10">en este edificio?</text>
+    <line x1="278" y1="538" x2="390" y2="470" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="300" y="520" font-size="10">Sí</text>
+    <rect x="390" y="448" width="270" height="40" rx="6" fill="#fff" stroke="#333"/>
+    <text x="525" y="466" text-anchor="middle" font-size="10">Queda afuera. Se permite el paso.</text>
+    <text x="525" y="480" text-anchor="middle" font-size="10">Puede ser otro tótem del edificio.</text>
+    <line x1="173" y1="576" x2="173" y2="600" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="180" y="592" font-size="10">No</text>
+    <rect x="390" y="560" width="270" height="40" rx="6" fill="#fff" stroke="#333"/>
+    <path d="M173 608 H525 V600" fill="none" stroke="#222" marker-end="url(#flecha)"/>
+    <text x="525" y="578" text-anchor="middle" font-size="10">Se niega: salida sin entrada.</text>
+    <text x="525" y="592" text-anchor="middle" font-size="10">Hay alerta. Sigue afuera.</text>
+  </svg>
+  <figcaption>Figura 4. Actividad del control de permanencia. Si ya quedó dentro y supera el máximo del edificio, el operador recibe una sola alerta y la salida posterior sigue el camino «hay entrada abierta».</figcaption>
+</figure>
+
+<figure>
+  <svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <defs>
+      <marker id="flecha2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#222"/>
+      </marker>
+    </defs>
+    <circle cx="36" cy="48" r="7" fill="#222"/>
+    <line x1="43" y1="48" x2="58" y2="48" stroke="#222" marker-end="url(#flecha2)"/>
+    <rect x="58" y="30" width="190" height="36" rx="8" fill="#fff" stroke="#333"/>
+    <text x="153" y="52" text-anchor="middle" font-size="11">Se emite. Todavía no abre.</text>
+    <line x1="248" y1="48" x2="268" y2="48" stroke="#222" marker-end="url(#flecha2)"/>
+    <rect x="268" y="30" width="200" height="36" rx="8" fill="#fff" stroke="#333"/>
+    <text x="368" y="46" text-anchor="middle" font-size="10">Se entrega en mano.</text>
+    <text x="368" y="60" text-anchor="middle" font-size="10">Habilita, si no hay otra igual.</text>
+    <line x1="468" y1="48" x2="500" y2="48" stroke="#222" marker-end="url(#flecha2)"/>
+    <polygon points="560,28 660,78 560,128 460,78" fill="#fff" stroke="#333"/>
+    <text x="560" y="74" text-anchor="middle" font-size="10">¿Qué ocurre</text>
+    <text x="560" y="88" text-anchor="middle" font-size="10">después?</text>
+
+    <line x1="520" y1="112" x2="150" y2="168" stroke="#222" marker-end="url(#flecha2)"/>
+    <line x1="560" y1="128" x2="560" y2="168" stroke="#222" marker-end="url(#flecha2)"/>
+    <line x1="610" y1="112" x2="620" y2="168" stroke="#222" marker-end="url(#flecha2)"/>
+    <text x="250" y="140" font-size="10">Pérdida</text>
+    <text x="566" y="154" font-size="10">Vence</text>
+    <text x="630" y="150" font-size="10">Reponer</text>
+
+    <rect x="40" y="168" width="200" height="44" rx="8" fill="#fff" stroke="#333"/>
+    <text x="140" y="186" text-anchor="middle" font-size="10">Pérdida, con motivo.</text>
+    <text x="140" y="202" text-anchor="middle" font-size="10">Ese código no vuelve.</text>
+    <rect x="280" y="168" width="180" height="44" rx="8" fill="#fff" stroke="#333"/>
+    <text x="370" y="186" text-anchor="middle" font-size="10">Vencimiento.</text>
+    <text x="370" y="202" text-anchor="middle" font-size="10">Deja de abrir.</text>
+    <rect x="490" y="168" width="190" height="44" rx="8" fill="#fff" stroke="#333"/>
+    <text x="585" y="186" text-anchor="middle" font-size="10">El código viejo queda muerto.</text>
+    <text x="585" y="202" text-anchor="middle" font-size="10">Nace otro, sin entregar.</text>
+
+    <line x1="140" y1="212" x2="140" y2="250" stroke="#222" marker-end="url(#flecha2)"/>
+    <polygon points="140,250 210,286 140,322 70,286" fill="#fff" stroke="#333"/>
+    <text x="140" y="282" text-anchor="middle" font-size="10">¿Se repone</text>
+    <text x="140" y="296" text-anchor="middle" font-size="10">ese código?</text>
+    <line x1="210" y1="286" x2="490" y2="190" stroke="#222" marker-end="url(#flecha2)"/>
+    <text x="300" y="250" font-size="10">Sí: mismo camino de reposición</text>
+    <circle cx="140" cy="340" r="8" fill="#fff" stroke="#222" stroke-width="2"/>
+    <line x1="140" y1="322" x2="140" y2="332" stroke="#222" marker-end="url(#flecha2)"/>
+    <text x="148" y="338" font-size="10">No</text>
+
+    <path d="M585 212 V250 H368 V66" fill="none" stroke="#1c3f6e" marker-end="url(#flecha2)"/>
+    <text x="400" y="242" font-size="10" fill="#1c3f6e">El nuevo también se entrega en mano</text>
+  </svg>
+  <figcaption>Figura 5. Actividad de la custodia del llavero. La emisión y la reposición convergen en la entrega en mano.</figcaption>
+</figure>
+
+<h2>3.3 Diagrama de transición de estados</h2>
+<figure>
+  <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <rect x="40" y="90" width="130" height="44" rx="6" fill="#fff" stroke="#333"/>
+    <text x="105" y="116" text-anchor="middle" font-size="13">Fuera</text>
+    <rect x="280" y="90" width="140" height="44" rx="6" fill="#e7f0e8" stroke="#333"/>
+    <text x="350" y="116" text-anchor="middle" font-size="13">Dentro</text>
+    <rect x="510" y="30" width="170" height="44" rx="6" fill="#fdecec" stroke="#333"/>
+    <text x="595" y="56" text-anchor="middle" font-size="12">Permanencia excedida</text>
+    <path d="M170 112 H280" stroke="#222" marker-end="url(#a)"/>
+    <path d="M280 124 H170" stroke="#222" marker-end="url(#a)"/>
+    <path d="M420 100 C480 70 500 60 510 52" fill="none" stroke="#222" marker-end="url(#a)"/>
+    <path d="M510 70 C420 150 360 150 280 130" fill="none" stroke="#222" marker-end="url(#a)"/>
+    <text x="200" y="100" font-size="9">Entrada concedida</text>
+    <text x="185" y="148" font-size="9">Salida concedida</text>
+    <text x="430" y="48" font-size="9">Superó el máximo</text>
+    <text x="360" y="168" font-size="9">Salida concedida</text>
+    <defs>
+      <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#222"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figura 6. Estados de la presencia en un edificio.</figcaption>
+</figure>
+<table>
+  <thead><tr><th>Transición</th><th>Regla de negocio</th></tr></thead>
+  <tbody>
+    <tr><td>Fuera → Dentro</td><td>El pase de entrada ya superó credencial, edificio, zona y horario, y no hay otra presencia abierta de esa persona en ese edificio. Entrar por cualquier acceso de entrada del edificio abre la presencia.</td></tr>
+    <tr><td>Dentro → Fuera</td><td>El pase es de salida, en cualquier acceso del mismo edificio, y la presencia sigue abierta. No hace falta que sea el mismo tótem de la entrada.</td></tr>
+    <tr><td>Dentro → Permanencia excedida</td><td>El tiempo desde el ingreso supera el máximo definido para ese edificio. Se genera una sola alerta. No se niega una salida posterior.</td></tr>
+    <tr><td>Permanencia excedida → Fuera</td><td>Misma regla que la salida desde Dentro.</td></tr>
+    <tr><td>Dentro → Dentro, rechazada</td><td>No es una transición válida. Una segunda entrada se niega con el motivo «ya se encuentra dentro» y genera alerta.</td></tr>
+    <tr><td>Fuera → Fuera, por una salida</td><td>No es válida. La salida sin entrada abierta se niega con el motivo «salida sin entrada» y genera alerta.</td></tr>
+  </tbody>
+</table>
+
+<figure>
+  <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <rect x="30" y="110" width="110" height="40" rx="6" fill="#fff" stroke="#333"/>
+    <text x="85" y="134" text-anchor="middle" font-size="12">Emitida</text>
+    <rect x="220" y="110" width="110" height="40" rx="6" fill="#e7f0e8" stroke="#333"/>
+    <text x="275" y="134" text-anchor="middle" font-size="12">Activa</text>
+    <rect x="420" y="30" width="120" height="40" rx="6" fill="#fdecec" stroke="#333"/>
+    <text x="480" y="54" text-anchor="middle" font-size="12">Bloqueada</text>
+    <rect x="420" y="110" width="120" height="40" rx="6" fill="#fff6e5" stroke="#333"/>
+    <text x="480" y="134" text-anchor="middle" font-size="12">Vencida</text>
+    <rect x="420" y="200" width="120" height="40" rx="6" fill="#eee" stroke="#333"/>
+    <text x="480" y="224" text-anchor="middle" font-size="12">Repuesta</text>
+    <path d="M140 130 H220" stroke="#222" marker-end="url(#b)"/>
+    <path d="M330 120 C380 70 400 60 420 50" fill="none" stroke="#222" marker-end="url(#b)"/>
+    <path d="M330 130 H420" stroke="#222" marker-end="url(#b)"/>
+    <path d="M330 145 C380 190 400 210 420 220" fill="none" stroke="#222" marker-end="url(#b)"/>
+    <path d="M420 60 C300 20 200 40 140 110" fill="none" stroke="#222" marker-end="url(#b)"/>
+    <path d="M420 150 C300 250 160 230 120 150" fill="none" stroke="#222" marker-end="url(#b)"/>
+    <text x="155" y="118" font-size="9">Entrega</text>
+    <text x="345" y="108" font-size="9">Pérdida</text>
+    <text x="350" y="126" font-size="9">Vence</text>
+    <text x="345" y="170" font-size="9">Reponer</text>
+    <text x="200" y="28" font-size="9">Reponer: nace otra Emitida</text>
+    <defs>
+      <marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#222"/>
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Figura 7. Estados del llavero. Repuesta y el camino de reposición desde Bloqueada o Vencida vuelven a una credencial nueva en Emitida. El código viejo no regresa a Activa.</figcaption>
+</figure>
+<table>
+  <thead><tr><th>Transición</th><th>Regla de negocio</th></tr></thead>
+  <tbody>
+    <tr><td>Inicio → Emitida</td><td>El alta de la persona, o la reposición, crea el llavero en Emitida. En ese estado el paso se niega: la credencial está sin entregar.</td></tr>
+    <tr><td>Emitida → Activa</td><td>El operador registra la entrega en mano. Se rechaza si esa persona ya tiene otra credencial activa del mismo tipo. El tipo cochera puede estar activo junto con el peatonal.</td></tr>
+    <tr><td>Activa → Bloqueada</td><td>Hay una denuncia de pérdida y un motivo escrito. No existe la vuelta Bloqueada → Activa.</td></tr>
+    <tr><td>Activa → Vencida</td><td>Llegó la fecha de vencimiento, o el operador marca el vencimiento. Una credencial vencida no abre.</td></tr>
+    <tr><td>Activa, Bloqueada o Vencida → Repuesta</td><td>Hay un código nuevo. El anterior queda reemplazado y no abre. El nuevo nace Emitido y debe entregarse. Repuesta no tiene salida hacia Activa.</td></tr>
+  </tbody>
+</table>
+
+<h2>3.4 Especificación del requerimiento núcleo</h2>
+<p><b>Nombre.</b> Controlar la permanencia en el edificio y custodiar el ciclo del llavero.</p>
+<p><b>Identificadores.</b> RF05, RF06 y RF07.</p>
+<p><b>Descripción.</b> Cuando una persona habilitada se presenta en un acceso, y el pase ya es válido por credencial, edificio, zona y horario, la organización actualiza la presencia de esa persona en ese edificio. Niega una segunda entrada y una salida sin entrada. Avisa una sola vez si la permanencia supera el máximo, sin trabar la salida. En paralelo, un llavero solo habilita después de entregarse, y deja de habilitar por pérdida, vencimiento o reposición, sin reactivar el código anterior.</p>
+<p><b>Origen.</b> Minuta del 16/09/2026. Objetivos específicos 2 y 3.</p>
+<p><b>Precondiciones.</b> La persona está en el padrón. El acceso pertenece a un edificio. El máximo de permanencia de ese edificio está definido.</p>
+<p><b>Postcondiciones de éxito.</b> Hay como máximo una presencia abierta por persona y edificio. Cada pase quedó asentado. El estado del llavero es uno de los cinco estados legales, y el movimiento quedó registrado.</p>
+<p><b>Criterios de aceptación.</b> Los enumerados en el apartado 1.8 para la iteración 3.</p>
+
+<h2>3.5 Guion de la interfaz</h2>
+<ol>
+  <li><b>Puesto en vivo.</b> Lucía entra al turno y abre «En vivo». Ve la métrica «Dentro ahora» y la tabla de presencias abiertas: persona, llavero, edificio, desde cuándo, minutos y estado. María Gómez aparece dentro de Pellegrini. En la misma pantalla siguen los últimos pases y las alertas, que ya existían.</li>
+  <li><b>Pase incoherente.</b> En el tótem de entrada de Pellegrini se lee el llavero de María. El visor marca en rojo «ya se encuentra dentro». En el puesto, el pase aparece denegado y hay una alerta pendiente. La fila de María sigue en «Dentro».</li>
+  <li><b>Salida por otro acceso.</b> Se lee el mismo llavero en el tótem de salida del consorcio. El paso se concede. La fila desaparece de «Dentro ahora».</li>
+  <li><b>Permanencia larga.</b> Si el ingreso superó el máximo del edificio, la fila pasa a «Permanencia excedida» y nace una alerta. Una segunda consulta no duplica esa alerta. La salida se concede.</li>
+  <li><b>Alta.</b> En «Clientes y llaves» se da de alta a una persona con el código del llavero. No hay un combo para elegir el estado. El padrón muestra el llavero como Emitida y solo ofrece Entregar.</li>
+  <li><b>Entrega.</b> Lucía confirma la entrega. El llavero pasa a Activa y aparecen Declarar pérdida, Marcar vencida y Reponer.</li>
+  <li><b>Pérdida.</b> Declarar pérdida pide un motivo. Si no hay motivo, no hay cambio. Después, el tótem responde «tarjeta bloqueada». No hay un botón para volver a activar ese código.</li>
+  <li><b>Reposición.</b> Reponer pide el código nuevo. El viejo queda Repuesta, sin acciones de reactivación. El nuevo aparece Emitida, asociado al código que reemplaza, y debe entregarse. El tótem del código viejo responde «credencial reemplazada». El del nuevo, «credencial sin entregar».</li>
+</ol>
+
+<h2>3.6 Análisis de requisitos</h2>
+<h3>3.6.1 Diagrama de casos de uso</h3>
+<figure>
+  <svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <circle cx="70" cy="40" r="12" fill="none" stroke="#222"/>
+    <line x1="70" y1="52" x2="70" y2="90" stroke="#222"/>
+    <line x1="40" y1="68" x2="100" y2="68" stroke="#222"/>
+    <line x1="70" y1="90" x2="50" y2="118" stroke="#222"/>
+    <line x1="70" y1="90" x2="90" y2="118" stroke="#222"/>
+    <text x="70" y="136" text-anchor="middle" font-size="10">Persona habilitada</text>
+
+    <circle cx="70" cy="190" r="12" fill="none" stroke="#222"/>
+    <line x1="70" y1="202" x2="70" y2="240" stroke="#222"/>
+    <line x1="40" y1="218" x2="100" y2="218" stroke="#222"/>
+    <line x1="70" y1="240" x2="50" y2="268" stroke="#222"/>
+    <line x1="70" y1="240" x2="90" y2="268" stroke="#222"/>
+    <text x="70" y="286" text-anchor="middle" font-size="10">Operador de monitoreo</text>
+
+    <ellipse cx="300" cy="70" rx="100" ry="28" fill="#fff" stroke="#222"/>
+    <text x="300" y="74" text-anchor="middle" font-size="11">Controlar presencia</text>
+    <ellipse cx="530" cy="40" rx="100" ry="26" fill="#fff" stroke="#222"/>
+    <text x="530" y="36" text-anchor="middle" font-size="10">Validar acceso</text>
+    <text x="530" y="50" text-anchor="middle" font-size="9">UC-01, iteración 2</text>
+    <ellipse cx="530" cy="120" rx="100" ry="26" fill="#fff" stroke="#222"/>
+    <text x="530" y="124" text-anchor="middle" font-size="11">Generar alerta</text>
+    <ellipse cx="340" cy="210" rx="120" ry="28" fill="#fff" stroke="#222"/>
+    <text x="340" y="214" text-anchor="middle" font-size="11">Custodiar el llavero</text>
+    <ellipse cx="580" cy="180" rx="78" ry="22" fill="#fff" stroke="#222"/>
+    <text x="580" y="184" text-anchor="middle" font-size="10">Entregar</text>
+    <ellipse cx="580" cy="230" rx="90" ry="22" fill="#fff" stroke="#222"/>
+    <text x="580" y="234" text-anchor="middle" font-size="10">Declarar pérdida</text>
+    <ellipse cx="580" cy="280" rx="78" ry="22" fill="#fff" stroke="#222"/>
+    <text x="580" y="284" text-anchor="middle" font-size="10">Reponer / vencer</text>
+
+    <line x1="100" y1="70" x2="200" y2="70" stroke="#222"/>
+    <line x1="100" y1="210" x2="220" y2="210" stroke="#222"/>
+    <line x1="400" y1="70" x2="430" y2="48" stroke="#222" stroke-dasharray="5 3"/>
+    <text x="400" y="48" font-size="9">«include»</text>
+    <line x1="400" y1="84" x2="430" y2="112" stroke="#222" stroke-dasharray="5 3"/>
+    <text x="392" y="112" font-size="9">«extend»</text>
+    <line x1="460" y1="200" x2="502" y2="184" stroke="#222" stroke-dasharray="5 3"/>
+    <line x1="460" y1="214" x2="490" y2="226" stroke="#222" stroke-dasharray="5 3"/>
+    <line x1="460" y1="228" x2="502" y2="270" stroke="#222" stroke-dasharray="5 3"/>
+    <text x="470" y="208" font-size="9">«include»</text>
+  </svg>
+  <figcaption>Figura 8. Casos de uso de la iteración 3. Controlar presencia incluye la validación ya entregada y extiende la generación de alerta cuando el pase de presencia se niega o cuando se excede la permanencia.</figcaption>
+</figure>
+<p>La relación de inclusión con UC-01 significa que no hay presencia si el pase no era válido por credencial, edificio, zona y horario. La extensión hacia Generar alerta ocurre en la entrada duplicada, en la salida sin entrada y en la permanencia excedida. Custodiar el llavero incluye entregar, declarar la pérdida, reponer y vencer: no se llega a esas acciones si no hay un llavero en un estado que las permita.</p>
+
+<h3>3.6.2 Especificación de casos de uso</h3>
+<h4>UC-02 Controlar la presencia en el edificio</h4>
+<table>
+  <tbody>
+    <tr><th>Actor principal</th><td>Persona habilitada. El guardia de puerta toma la lectura. El operador de monitoreo observa el resultado.</td></tr>
+    <tr><th>Objetivo</th><td>Dejar a la persona dentro o fuera del edificio que corresponde, y negar el pase que contradice esa situación.</td></tr>
+    <tr><th>Precondiciones</th><td>El acceso pertenece a un edificio. La credencial está entregada. UC-01 considera el pase válido.</td></tr>
+    <tr><th>Postcondición de éxito</th><td>Hay una presencia abierta si entró, o ninguna si salió. El pase quedó asentado como concedido.</td></tr>
+  </tbody>
+</table>
+<table class="paso">
+  <thead><tr><th>Paso</th><th>Flujo principal — entrada</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>La persona se presenta en un acceso de entrada.</td></tr>
+    <tr><td>2</td><td>El guardia lee el llavero.</td></tr>
+    <tr><td>3</td><td>«include» UC-01 Validar acceso físico. El pase es válido.</td></tr>
+    <tr><td>4</td><td>La organización comprueba que esa persona no tenga una presencia abierta en ese edificio.</td></tr>
+    <tr><td>5</td><td>Se asienta el pase concedido, con sentido de entrada.</td></tr>
+    <tr><td>6</td><td>La persona queda Dentro en ese edificio.</td></tr>
+    <tr><td>7</td><td>Se permite el paso.</td></tr>
+  </tbody>
+</table>
+<p><b>Flujo alternativo A — salida.</b> En el paso 1 el acceso es de salida. En el paso 4 se comprueba que exista una presencia abierta en ese edificio, aunque la entrada haya sido por otro acceso. En el paso 6 la persona queda Fuera. Se permite el paso.</p>
+<p><b>Flujo alternativo B — ya está dentro.</b> En el paso 4 la presencia está abierta. Se asienta el pase denegado con motivo «ya se encuentra dentro». «extend» Generar alerta. No se abre el acceso. La presencia no cambia.</p>
+<p><b>Flujo alternativo C — salida sin entrada.</b> El acceso es de salida y no hay presencia abierta. Se asienta «salida sin entrada». «extend» Generar alerta. No se abre.</p>
+<p><b>Flujo alternativo D — permanencia excedida.</b> No nace de un pase. Si el tiempo dentro supera el máximo del edificio, el estado pasa a Permanencia excedida y se genera una sola alerta. Un pase de salida posterior sigue el flujo A.</p>
+<p><b>Flujo de excepción — UC-01 rechaza el pase.</b> No se abre ni se cierra presencia. Vale lo ya especificado en la iteración 2: credencial inexistente, sin entregar, bloqueada, vencida, reemplazada, persona inactiva, edificio o zona no autorizados, fuera de horario.</p>
+
+<h4>UC-03 Custodiar el ciclo del llavero</h4>
+<table>
+  <tbody>
+    <tr><th>Actor principal</th><td>Operador de monitoreo, en nombre de la administración de APL.</td></tr>
+    <tr><th>Objetivo</th><td>Que el llavero habilite solo después de la entrega, y que la pérdida, el vencimiento y la reposición dejen una constancia irreversible.</td></tr>
+    <tr><th>Precondiciones</th><td>La persona está en el padrón.</td></tr>
+  </tbody>
+</table>
+<table class="paso">
+  <thead><tr><th>Paso</th><th>Flujo de emisión y entrega</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>El operador da de alta a la persona e indica el código del llavero.</td></tr>
+    <tr><td>2</td><td>El llavero queda Emitido. No habilita el paso.</td></tr>
+    <tr><td>3</td><td>«include» Entregar. El operador confirma la entrega en mano.</td></tr>
+    <tr><td>4</td><td>Se comprueba que no exista otra credencial activa del mismo tipo para esa persona. La cochera es otro tipo y no bloquea a la peatonal.</td></tr>
+    <tr><td>5</td><td>El llavero queda Activo. Se asienta el movimiento, con fecha de entrega.</td></tr>
+  </tbody>
+</table>
+<p><b>Include Declarar pérdida.</b> El llavero está Activo. El operador indica un motivo. Si el motivo está vacío, no hay cambio. Si lo hay, el llavero queda Bloqueado y el movimiento guarda el motivo. No hay acción para volver a Activo.</p>
+<p><b>Include Vencer.</b> El llavero está Activo. El operador marca el vencimiento, o la fecha de vencimiento ya pasó al momento del pase. Queda Vencido y no abre.</p>
+<p><b>Include Reponer.</b> El llavero está Activo, Bloqueado o Vencido. El operador indica un código nuevo, que no existe. El anterior queda Repuesto y no abre. El nuevo queda Emitido, señala al que reemplaza, y solo habilitará después de una entrega. Se asientan los dos movimientos.</p>
+<p><b>Excepción.</b> Intentar fijar el estado por una corrección directa del formulario se rechaza. El padrón no ofrece esa acción.</p>
+
+<h3>3.6.3 Modelo de dominio conceptual</h3>
+<p>Los conceptos son los del negocio, sin atributos de implementación. Edificio es el sitio cliente. La persona habilitada pertenece a lo sumo a un edificio; si no pertenece a ninguno, es personal de servicio. El llavero es el elemento que se entrega. Su historial de custodia no se borra cuando cambia de estado. La presencia es el hecho de estar adentro de un edificio, distinto del historial de pases. La zona y el nivel siguen siendo los de la iteración 2: dicen dónde puede pasar, no si ya está adentro.</p>
+<figure>
+  <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <g font-size="12">
+      <rect x="20" y="20" width="150" height="36" fill="#fff" stroke="#222"/><text x="95" y="42" text-anchor="middle">Edificio</text>
+      <rect x="220" y="20" width="170" height="36" fill="#fff" stroke="#222"/><text x="305" y="42" text-anchor="middle">Persona habilitada</text>
+      <rect x="440" y="20" width="140" height="36" fill="#fff" stroke="#222"/><text x="510" y="42" text-anchor="middle">Llavero</text>
+      <rect x="610" y="20" width="90" height="36" fill="#fff" stroke="#222"/><text x="655" y="42" text-anchor="middle">Custodia</text>
+      <rect x="20" y="130" width="150" height="36" fill="#fff" stroke="#222"/><text x="95" y="152" text-anchor="middle">Zona</text>
+      <rect x="220" y="130" width="150" height="36" fill="#fff" stroke="#222"/><text x="295" y="152" text-anchor="middle">Nivel</text>
+      <rect x="420" y="130" width="160" height="36" fill="#e7f0e8" stroke="#222"/><text x="500" y="152" text-anchor="middle">Presencia</text>
+      <rect x="20" y="230" width="160" height="36" fill="#fff" stroke="#222"/><text x="100" y="252" text-anchor="middle">Puesto de acceso</text>
+      <rect x="230" y="230" width="140" height="36" fill="#fff" stroke="#222"/><text x="300" y="252" text-anchor="middle">Pase</text>
+      <rect x="420" y="230" width="140" height="36" fill="#fff" stroke="#222"/><text x="490" y="252" text-anchor="middle">Alerta</text>
+      <rect x="580" y="230" width="120" height="36" fill="#fff" stroke="#222"/><text x="640" y="252" text-anchor="middle">Operador</text>
+    </g>
+    <g font-size="9" fill="#333">
+      <text x="175" y="16">1 edificio, muchas personas</text>
+      <text x="400" y="16">1 persona, muchos llaveros</text>
+      <text x="560" y="70">1 llavero, muchos movimientos</text>
+      <text x="250" y="118">el nivel habilita zonas</text>
+      <text x="40" y="118">el edificio agrupa zonas</text>
+      <text x="430" y="118">1 presencia abierta por persona y edificio</text>
+      <text x="40" y="210">el puesto está en una zona</text>
+      <text x="250" y="214">el pase ocurre en un puesto</text>
+      <text x="430" y="214">la alerta se atiende en el puesto</text>
+    </g>
+  </svg>
+  <figcaption>Figura 9. Dominio conceptual. La presencia es un concepto distinto del pase: el pase es el hecho histórico; la presencia es la situación actual en un edificio.</figcaption>
+</figure>
+
+<h2>3.7 Diseño preliminar</h2>
+<h3>3.7.1 Diagrama de robustez de UC-02</h3>
+<p>Se incluye aunque la guía lo marca como opcional, porque separa el puesto físico, la regla y los hechos que se guardan. El mismo corte se usa para el llavero: la pantalla no decide la transición; la regla de custodia sí.</p>
+<figure>
+  <svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <circle cx="70" cy="50" r="36" fill="#fff" stroke="#222"/>
+    <text x="70" y="46" text-anchor="middle" font-size="10">Tótem</text>
+    <text x="70" y="60" text-anchor="middle" font-size="10">de puerta</text>
+    <rect x="160" y="28" width="130" height="44" fill="#fff" stroke="#222"/>
+    <text x="225" y="54" text-anchor="middle" font-size="11">Validar pase</text>
+    <rect x="340" y="28" width="150" height="44" fill="#fff" stroke="#222"/>
+    <text x="415" y="54" text-anchor="middle" font-size="11">Actualizar presencia</text>
+    <circle cx="590" cy="50" r="40" fill="#fff" stroke="#222"/>
+    <text x="590" y="46" text-anchor="middle" font-size="10">Presencia</text>
+    <text x="590" y="60" text-anchor="middle" font-size="10">Pase · Alerta</text>
+    <rect x="300" y="100" width="150" height="40" rx="16" fill="#fff" stroke="#222"/>
+    <text x="375" y="124" text-anchor="middle" font-size="11">Panel en vivo</text>
+    <line x1="106" y1="50" x2="160" y2="50" stroke="#222"/>
+    <line x1="290" y1="50" x2="340" y2="50" stroke="#222"/>
+    <line x1="490" y1="50" x2="550" y2="50" stroke="#222"/>
+    <line x1="375" y1="100" x2="415" y2="72" stroke="#222"/>
+  </svg>
+  <figcaption>Figura 10. Robustez de controlar la presencia. El panel solo muestra. La actualización de la presencia ocurre después de validar el pase.</figcaption>
+</figure>
+<p>La decisión de diseño que sostiene las dos máquinas de estado es no dispersar las transiciones en la pantalla. La presencia se resuelve al conceder el pase y se aplica junto con la constancia, para no dejar un pase concedido sin presencia, ni una presencia sin pase. El llavero solo cambia de estado por una transición con regla: entregar, declarar pérdida, vencer o reponer. Cada una escribe el movimiento. La zona sigue tratándose como un árbol: un nivel concedido sobre una zona vale para sus zonas interiores. Eso ya estaba en la iteración 2 y esta iteración no lo modifica.</p>
+
+<h3>3.7.2 Dominio actualizado</h3>
+<p>Se agregan atributos, multiplicidad y los conceptos nuevos de esta iteración: Presencia y Movimiento de custodia. Los atributos de validación de la iteración 2 se conservan.</p>
+<figure>
+  <svg viewBox="0 0 720 560" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif">
+    <g font-size="10">
+      <rect x="16" y="16" width="200" height="92" fill="#fff" stroke="#222"/>
+      <text x="24" y="32" font-weight="700" font-size="12">Edificio</text>
+      <text x="24" y="50">nombre</text>
+      <text x="24" y="64">dirección</text>
+      <text x="24" y="78">horas de permanencia máxima</text>
+      <text x="24" y="96" font-size="9">1 —— * Persona habilitada</text>
+
+      <rect x="250" y="16" width="220" height="120" fill="#fff" stroke="#222"/>
+      <text x="258" y="32" font-weight="700" font-size="12">Persona habilitada</text>
+      <text x="258" y="50">nombre, apellido, documento</text>
+      <text x="258" y="64">estado: activo o inactivo</text>
+      <text x="258" y="78">edificio: 0..1</text>
+      <text x="258" y="92">nivel: 0..1</text>
+      <text x="258" y="112" font-size="9">1 —— * Llavero</text>
+      <text x="258" y="126" font-size="9">1 —— * Presencia</text>
+
+      <rect x="500" y="16" width="200" height="150" fill="#fff" stroke="#222"/>
+      <text x="508" y="32" font-weight="700" font-size="12">Llavero</text>
+      <text x="508" y="50">código, único</text>
+      <text x="508" y="64">tipo: peatonal o cochera</text>
+      <text x="508" y="78">estado</text>
+      <text x="508" y="92">motivo del estado</text>
+      <text x="508" y="106">fecha de entrega</text>
+      <text x="508" y="120">vencimiento</text>
+      <text x="508" y="134">reemplaza: 0..1 llavero</text>
+      <text x="508" y="154" font-size="9">1 —— * Movimiento de custodia</text>
+
+      <rect x="16" y="180" width="210" height="100" fill="#e7f0e8" stroke="#222"/>
+      <text x="24" y="198" font-weight="700" font-size="12">Presencia</text>
+      <text x="24" y="216">estado: dentro, excedida, fuera</text>
+      <text x="24" y="230">ingreso, egreso</text>
+      <text x="24" y="244">persona, edificio, llavero</text>
+      <text x="24" y="258">pase de entrada y pase de salida</text>
+      <text x="24" y="272" font-size="9">0..1 abierta por persona y edificio</text>
+
+      <rect x="250" y="180" width="210" height="78" fill="#fff" stroke="#222"/>
+      <text x="258" y="198" font-weight="700" font-size="12">Movimiento de custodia</text>
+      <text x="258" y="216">estado origen y destino</text>
+      <text x="258" y="230">motivo, momento</text>
+      <text x="258" y="244">operador: 0..1</text>
+
+      <rect x="490" y="190" width="200" height="78" fill="#fff" stroke="#222"/>
+      <text x="498" y="208" font-weight="700" font-size="12">Nivel</text>
+      <text x="498" y="226">nombre</text>
+      <text x="498" y="240">zonas: * </text>
+      <text x="498" y="254">horarios: 1 —— *</text>
+
+      <rect x="16" y="320" width="200" height="92" fill="#fff" stroke="#222"/>
+      <text x="24" y="338" font-weight="700" font-size="12">Zona</text>
+      <text x="24" y="356">nombre, nivel de seguridad</text>
+      <text x="24" y="370">zona padre: 0..1</text>
+      <text x="24" y="384">edificio: 1</text>
+      <text x="24" y="400" font-size="9">1 —— * puestos de acceso</text>
+
+      <rect x="240" y="320" width="210" height="100" fill="#fff" stroke="#222"/>
+      <text x="248" y="338" font-weight="700" font-size="12">Puesto de acceso</text>
+      <text x="248" y="356">descripción, ubicación</text>
+      <text x="248" y="370">sentido: entrada o salida</text>
+      <text x="248" y="384">zona: 1</text>
+      <text x="248" y="404" font-size="9">1 —— * controladores</text>
+
+      <rect x="470" y="310" width="220" height="110" fill="#fff" stroke="#222"/>
+      <text x="478" y="328" font-weight="700" font-size="12">Pase</text>
+      <text x="478" y="346">momento, sentido</text>
+      <text x="478" y="360">resultado, motivo de rechazo</text>
+      <text x="478" y="374">controlador: 0..1</text>
+      <text x="478" y="388">llavero: 0..1</text>
+      <text x="478" y="406" font-size="9">el historial no se reescribe</text>
+
+      <rect x="16" y="450" width="250" height="90" fill="#fff" stroke="#222"/>
+      <text x="24" y="468" font-weight="700" font-size="12">Alerta</text>
+      <text x="24" y="486">tipo, gravedad, momento</text>
+      <text x="24" y="500">estado de atención</text>
+      <text x="24" y="514">controlador: 1</text>
+      <text x="24" y="528">resolución: 0..1, con operador</text>
+
+      <rect x="300" y="450" width="250" height="78" fill="#fff" stroke="#222"/>
+      <text x="308" y="468" font-weight="700" font-size="12">Operador</text>
+      <text x="308" y="486">usuario, turno</text>
+      <text x="308" y="506" font-size="9">1 —— * resoluciones de alerta</text>
+      <text x="308" y="520" font-size="9">1 —— * movimientos de custodia</text>
+    </g>
+  </svg>
+  <figcaption>Figura 11. Dominio de la iteración 3, con atributos y multiplicidad. La restricción «una presencia abierta por persona y edificio» y «una credencial activa por tipo» son reglas del dominio, no adornos de la pantalla.</figcaption>
+</figure>
+<p>Multiplicidades que la figura no dibuja con una línea para no cruzar el cuadro: un edificio tiene muchas zonas, muchos puestos a través de esas zonas, muchas presencias y muchos controladores. Un controlador está en un puesto y en un edificio. Un pase referencia a lo sumo un llavero y a lo sumo un controlador, porque un intento con código desconocido igual se asienta.</p>
+
+<h2>3.8 Versión ejecutable de la iteración</h2>
+<p>La guía pide que la iteración deje una versión que satisfaga los requerimientos, no el listado del código. El diseño detallado y el código de la validación de acceso constan en el Parcial II del 07/07/2026. Sobre esa base, la iteración 3 ya se ejecuta en el panel del operador y en el tótem de prueba. La demostración del 29/09 recorrió estos resultados, alineados con los criterios del apartado 1.8:</p>
+<ul>
+  <li>María Gómez figura dentro del Consorcio Pellegrini. Un segundo pase en la entrada se niega con «ya se encuentra dentro».</li>
+  <li>Una salida sin entrada abierta se niega con «salida sin entrada».</li>
+  <li>Entrar por un tótem y salir por otro del mismo edificio cierra la presencia.</li>
+  <li>El personal de servicio queda dentro en dos edificios a la vez.</li>
+  <li>Superado el máximo, hay una sola alerta de permanencia excedida.</li>
+  <li>Un llavero emitido no abre. Después de entregarlo, abre.</li>
+  <li>La pérdida no se revierte corrigiendo el estado a mano. La reposición deja el código anterior muerto y el nuevo sin entregar.</li>
+  <li>Dos peatonales activas se rechazan. Una peatonal y una de cochera se aceptan.</li>
+</ul>
+<p>Esos recorridos están automatizados como prueba de la iteración, además de la demostración en el puesto.</p>
+
+<h1 id="s13">4. Hoja de seguimiento</h1>
+<table>
+  <thead><tr><th>Fecha</th><th>Autor</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td>02/06/2026</td><td>Audoglio, Pablo</td><td>Devolución del Parcial I de Ingeniería de Software. Corregir visibilidad pública, listas en las relaciones de uno a muchos, el nombre de usuario físico, el modelo de dominio y el vínculo de Persona.</td></tr>
+    <tr><td>07/07/2026</td><td>Komorovski, Luciano</td><td>Entrega del Parcial II de Ingeniería de Software. Se incorporan actividad, secuencia, clases, modelo de datos y la versión ejecutable de la validación de acceso.</td></tr>
+    <tr><td>16/09/2026</td><td>Komorovski, Luciano</td><td>Minuta de relevamiento de la iteración 3 con el cliente y la operadora. Quedan definidas la presencia por edificio y el ciclo del llavero. Las visitas siguen excluidas.</td></tr>
+    <tr><td>29/09/2026</td><td>Komorovski, Luciano</td><td>Entrega del Parcial I de Trabajo de Diploma. Se actualiza el acta para este cuatrimestre y se documenta la iteración 3 hasta el diseño preliminar, con la versión ejecutable demostrada.</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

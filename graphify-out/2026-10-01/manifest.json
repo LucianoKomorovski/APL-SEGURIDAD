@@ -1,0 +1,260 @@
+{
+  ".vscode/settings.json": {
+    "mtime": 1788286151.447629,
+    "seen": 1790897664.6641092,
+    "ast_hash": "0e0c852e5860056634616b2a2cdb10b4",
+    "semantic_hash": "0e0c852e5860056634616b2a2cdb10b4"
+  },
+  "backend/accesos/__init__.py": {
+    "mtime": 1780423753.3086865,
+    "seen": 1790897664.664114,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/accesos/admin.py": {
+    "mtime": 1790784934.861864,
+    "seen": 1790897664.664116,
+    "ast_hash": "b96527eec3f48d5ffd2731039e8ed193",
+    "semantic_hash": "b96527eec3f48d5ffd2731039e8ed193"
+  },
+  "backend/accesos/apps.py": {
+    "mtime": 1780423753.2385857,
+    "seen": 1790897664.6641173,
+    "ast_hash": "bb434bfd0bf1aa9acbfeda00565c5576",
+    "semantic_hash": "bb434bfd0bf1aa9acbfeda00565c5576"
+  },
+  "backend/accesos/ciclo_credencial.py": {
+    "mtime": 1790727730.26351,
+    "seen": 1790897664.6641185,
+    "ast_hash": "11a524da48f5faad4582c7291b175d3b",
+    "semantic_hash": "11a524da48f5faad4582c7291b175d3b"
+  },
+  "backend/accesos/management/__init__.py": {
+    "mtime": 1788630222.682345,
+    "seen": 1790897664.6641195,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/accesos/management/commands/__init__.py": {
+    "mtime": 1788630222.6837993,
+    "seen": 1790897664.6641207,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/accesos/management/commands/seed_demo.py": {
+    "mtime": 1790727869.5422978,
+    "seen": 1790897664.6641219,
+    "ast_hash": "43bac65c813920ed21d9f579093b6a64",
+    "semantic_hash": "43bac65c813920ed21d9f579093b6a64"
+  },
+  "backend/accesos/migrations/0001_initial.py": {
+    "mtime": 1780674480.4998233,
+    "seen": 1790897664.664123,
+    "ast_hash": "c362ee1d34f3ce78f69bf0910eb9f628",
+    "semantic_hash": "c362ee1d34f3ce78f69bf0910eb9f628"
+  },
+  "backend/accesos/migrations/0002_edificio_controladoracceso_edificio_and_more.py": {
+    "mtime": 1782423593.621311,
+    "seen": 1790897664.6641243,
+    "ast_hash": "72ef4d5c1e5545fa326d6c1a59ca5ec1",
+    "semantic_hash": "72ef4d5c1e5545fa326d6c1a59ca5ec1"
+  },
+  "backend/accesos/migrations/0003_motor_reglas_zonas_m2m.py": {
+    "mtime": 1788630222.6840982,
+    "seen": 1790897664.6641252,
+    "ast_hash": "2bdece768de4364b3f024580c9e6487e",
+    "semantic_hash": "2bdece768de4364b3f024580c9e6487e"
+  },
+  "backend/accesos/migrations/0004_entrada_salida_totem.py": {
+    "mtime": 1788630222.6840982,
+    "seen": 1790897664.6641264,
+    "ast_hash": "e4a1101318df9702eb6a8dc40ba7e5ab",
+    "semantic_hash": "e4a1101318df9702eb6a8dc40ba7e5ab"
+  },
+  "backend/accesos/migrations/0005_presencia.py": {
+    "mtime": 1790727528.970836,
+    "seen": 1790897664.6641276,
+    "ast_hash": "331ae7deaa221265e81bdf8647d62851",
+    "semantic_hash": "331ae7deaa221265e81bdf8647d62851"
+  },
+  "backend/accesos/migrations/0006_ciclo_credencial.py": {
+    "mtime": 1790727714.1297064,
+    "seen": 1790897664.6641285,
+    "ast_hash": "45a6a68c67c5f84198c37e2a819be42e",
+    "semantic_hash": "45a6a68c67c5f84198c37e2a819be42e"
+  },
+  "backend/accesos/migrations/__init__.py": {
+    "mtime": 1780423753.3166916,
+    "seen": 1790897664.6641293,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/accesos/models.py": {
+    "mtime": 1790784893.050201,
+    "seen": 1790897664.6641302,
+    "ast_hash": "6ed2c2235e7c993cd649f133161deeca",
+    "semantic_hash": "6ed2c2235e7c993cd649f133161deeca"
+  },
+  "backend/accesos/motor_reglas.py": {
+    "mtime": 1790727731.4545848,
+    "seen": 1790897664.6641314,
+    "ast_hash": "4993fe12824ce3cb71849596bdfa59e6",
+    "semantic_hash": "4993fe12824ce3cb71849596bdfa59e6"
+  },
+  "backend/accesos/serializers.py": {
+    "mtime": 1790780663.6023219,
+    "seen": 1790897664.6641324,
+    "ast_hash": "0af3ee6bd4ce0ea19d7848b6e6f8e243",
+    "semantic_hash": "0af3ee6bd4ce0ea19d7848b6e6f8e243"
+  },
+  "backend/accesos/tests.py": {
+    "mtime": 1790727889.8814235,
+    "seen": 1790897664.6641333,
+    "ast_hash": "5318b156545b247e0388a29fdf6a32ca",
+    "semantic_hash": "5318b156545b247e0388a29fdf6a32ca"
+  },
+  "backend/accesos/urls.py": {
+    "mtime": 1790727585.9781587,
+    "seen": 1790897664.6641345,
+    "ast_hash": "201576870f489c4c1a197f1b9471878a",
+    "semantic_hash": "201576870f489c4c1a197f1b9471878a"
+  },
+  "backend/accesos/views.py": {
+    "mtime": 1790787388.9264777,
+    "seen": 1790897664.6641352,
+    "ast_hash": "9d9c9ad1a44d32b765f97720bf735073",
+    "semantic_hash": "9d9c9ad1a44d32b765f97720bf735073"
+  },
+  "backend/manage.py": {
+    "mtime": 1780423680.7343156,
+    "seen": 1790897664.6641362,
+    "ast_hash": "6258832676e1eaeda4a93f6e37b2a2f6",
+    "semantic_hash": "6258832676e1eaeda4a93f6e37b2a2f6"
+  },
+  "backend/sgca_backend/__init__.py": {
+    "mtime": 1780423680.8841758,
+    "seen": 1790897664.6641378,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/sgca_backend/asgi.py": {
+    "mtime": 1780423680.773817,
+    "seen": 1790897664.6641388,
+    "ast_hash": "c455367399702f3a61237b22d622856c",
+    "semantic_hash": "c455367399702f3a61237b22d622856c"
+  },
+  "backend/sgca_backend/settings.py": {
+    "mtime": 1788630222.6856887,
+    "seen": 1790897664.6641397,
+    "ast_hash": "e7cd078abafd07b75ddd741d339bb21a",
+    "semantic_hash": "e7cd078abafd07b75ddd741d339bb21a"
+  },
+  "backend/sgca_backend/urls.py": {
+    "mtime": 1790784935.7580066,
+    "seen": 1790897664.6641407,
+    "ast_hash": "e67d8cd5bcef2d128fba1f7e762d980d",
+    "semantic_hash": "e67d8cd5bcef2d128fba1f7e762d980d"
+  },
+  "backend/sgca_backend/wsgi.py": {
+    "mtime": 1780423680.883178,
+    "seen": 1790897664.664142,
+    "ast_hash": "f3e559808a823a41ff07d83716e9c45f",
+    "semantic_hash": "f3e559808a823a41ff07d83716e9c45f"
+  },
+  "frontend/eslint.config.js": {
+    "mtime": 1780676872.3441567,
+    "seen": 1790897664.6641428,
+    "ast_hash": "3aa4b57d7f08181d86bde52a4dcb7f22",
+    "semantic_hash": "3aa4b57d7f08181d86bde52a4dcb7f22"
+  },
+  "frontend/package.json": {
+    "mtime": 1780933292.153818,
+    "seen": 1790897664.6641438,
+    "ast_hash": "30985aa925e2fd39984d418c49f4398e",
+    "semantic_hash": "30985aa925e2fd39984d418c49f4398e"
+  },
+  "frontend/src/App.jsx": {
+    "mtime": 1790782589.8504548,
+    "seen": 1790897664.6641452,
+    "ast_hash": "82b997fac164b45fa75d0fa067200099",
+    "semantic_hash": "82b997fac164b45fa75d0fa067200099"
+  },
+  "frontend/src/EdificioSelect.jsx": {
+    "mtime": 1790782574.2164485,
+    "seen": 1790897664.6641464,
+    "ast_hash": "ebd0fbe2f7a49c0a6c86bfe00d6bce4d",
+    "semantic_hash": "ebd0fbe2f7a49c0a6c86bfe00d6bce4d"
+  },
+  "frontend/src/PageHead.jsx": {
+    "mtime": 1790708546.0090725,
+    "seen": 1790897664.6641474,
+    "ast_hash": "317863fbc0c0c76b45c976e743a288d5",
+    "semantic_hash": "317863fbc0c0c76b45c976e743a288d5"
+  },
+  "frontend/src/api.js": {
+    "mtime": 1788630222.686093,
+    "seen": 1790897664.6641486,
+    "ast_hash": "5d485e463ff338458bcd1d551e9febe2",
+    "semantic_hash": "5d485e463ff338458bcd1d551e9febe2"
+  },
+  "frontend/src/main.jsx": {
+    "mtime": 1780676872.4530566,
+    "seen": 1790897664.6641495,
+    "ast_hash": "e13723e2574429d9a6d849727e3ff695",
+    "semantic_hash": "e13723e2574429d9a6d849727e3ff695"
+  },
+  "frontend/src/pages/Dashboard.jsx": {
+    "mtime": 1790782583.776464,
+    "seen": 1790897664.6641505,
+    "ast_hash": "fb644a6c328186c69e3f5453135b4d9b",
+    "semantic_hash": "fb644a6c328186c69e3f5453135b4d9b"
+  },
+  "frontend/src/pages/Dispositivos.jsx": {
+    "mtime": 1790708652.4864545,
+    "seen": 1790897664.6641517,
+    "ast_hash": "b84e8c75a6ba0fcc16eeae243ab0787c",
+    "semantic_hash": "b84e8c75a6ba0fcc16eeae243ab0787c"
+  },
+  "frontend/src/pages/Historial.jsx": {
+    "mtime": 1790782658.7409916,
+    "seen": 1790897664.6641526,
+    "ast_hash": "f68c50b5bd923dd03522a32e0dc97d1c",
+    "semantic_hash": "f68c50b5bd923dd03522a32e0dc97d1c"
+  },
+  "frontend/src/pages/Niveles.jsx": {
+    "mtime": 1790782687.4677596,
+    "seen": 1790897664.6641533,
+    "ast_hash": "cfbc18dce9bed08cde68820fd779b5e3",
+    "semantic_hash": "cfbc18dce9bed08cde68820fd779b5e3"
+  },
+  "frontend/src/pages/Simulador.jsx": {
+    "mtime": 1790727863.9833784,
+    "seen": 1790897664.6641545,
+    "ast_hash": "6a6a1d9969ef215961097b0f7a67462c",
+    "semantic_hash": "6a6a1d9969ef215961097b0f7a67462c"
+  },
+  "frontend/src/pages/Usuarios.jsx": {
+    "mtime": 1790782632.4678767,
+    "seen": 1790897664.6641557,
+    "ast_hash": "6ed4249995dce7395d67d17a0a8859a0",
+    "semantic_hash": "6ed4249995dce7395d67d17a0a8859a0"
+  },
+  "frontend/src/pages/Zonas.jsx": {
+    "mtime": 1790782643.963265,
+    "seen": 1790897664.6641567,
+    "ast_hash": "c5b355989b3f36f4021a780180ef7d35",
+    "semantic_hash": "c5b355989b3f36f4021a780180ef7d35"
+  },
+  "frontend/vite.config.js": {
+    "mtime": 1790897408.1260505,
+    "seen": 1790897664.6641576,
+    "ast_hash": "2806ae479485a63d4aaaf52c9abe0f9d",
+    "semantic_hash": "2806ae479485a63d4aaaf52c9abe0f9d"
+  },
+  "simulador_hardware.py": {
+    "mtime": 1788630222.6871028,
+    "seen": 1790897664.6641586,
+    "ast_hash": "c5fa41c8fd0de58da7c03e578dfccddb",
+    "semantic_hash": "c5fa41c8fd0de58da7c03e578dfccddb"
+  }
+}
