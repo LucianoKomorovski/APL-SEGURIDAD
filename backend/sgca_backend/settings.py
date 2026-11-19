@@ -102,10 +102,11 @@ if DATABASE_URL:
     if not DATABASE_URL.startswith(('postgres://', 'postgresql://')):
         raise ImproperlyConfigured('DATABASE_URL debe ser PostgreSQL.')
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=60, conn_health_checks=True)}
-    DATABASES['default']['OPTIONS'].setdefault('sslmode', 'require')
-    if not DEBUG and DATABASES['default']['OPTIONS']['sslmode'] not in ('require', 'verify-ca', 'verify-full'):
+    database_options = DATABASES['default'].setdefault('OPTIONS', {})
+    sslmode = database_options.setdefault('sslmode', 'require')
+    if not DEBUG and sslmode not in ('require', 'verify-ca', 'verify-full'):
         raise ImproperlyConfigured('PostgreSQL online requiere TLS.')
-    DATABASES['default']['OPTIONS']['connect_timeout'] = 10
+    database_options['connect_timeout'] = 10
 else:
     if not DEBUG:
         raise ImproperlyConfigured('DATABASE_URL es obligatoria online; SQLite se conserva para desarrollo.')
