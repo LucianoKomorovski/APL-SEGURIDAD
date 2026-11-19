@@ -1,3 +1,4 @@
+from django.test import override_settings
 from io import StringIO
 
 from django.contrib.auth.models import User
@@ -355,6 +356,7 @@ class IncidentesApiTests(TestCase):
 
 
 class IncidentesDemoTests(TestCase):
+    @override_settings(DEBUG=True)
     def test_seed_incidentes_es_idempotente(self):
         salida = StringIO()
         call_command('seed_demo', stdout=salida)

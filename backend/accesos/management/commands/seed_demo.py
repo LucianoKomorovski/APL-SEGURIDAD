@@ -1,3 +1,4 @@
+from accesos.management.demo_passwords import demo_passwords
 from datetime import date, time, timedelta
 
 from django.contrib.auth.hashers import make_password
@@ -78,6 +79,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        operator_password, tech_password = demo_passwords()
         pellegrini, raiz_pel, ingreso_pel = _edificio_con_ingreso(
             'Consorcio Pellegrini',
             'Av. Pellegrini 1200, Rosario',
@@ -191,11 +193,11 @@ class Command(BaseCommand):
                 'email': 'operador@apl-demo.local',
                 'telefono': '3415550000',
                 'turno_asignado': 'Tarde',
-                'password_hash': make_password('apl2026'),
+                'password_hash': make_password(operator_password),
             },
         )
         if not created_op:
-            operador.password_hash = make_password('apl2026')
+            operador.password_hash = make_password(operator_password)
             operador.save(update_fields=['password_hash'])
 
         vencimiento = timezone.now().date() + timedelta(days=365)
@@ -285,7 +287,7 @@ class Command(BaseCommand):
                 'email': operador.email,
             },
         )
-        usuario_operador.set_password('apl2026')
+        usuario_operador.set_password(operator_password)
         usuario_operador.is_active = True
         usuario_operador.save()
         CuentaSistema.objects.update_or_create(
@@ -302,7 +304,7 @@ class Command(BaseCommand):
                 'email': persona_tecnica.email,
             },
         )
-        usuario_tecnico.set_password('apl2026')
+        usuario_tecnico.set_password(tech_password)
         usuario_tecnico.is_active = True
         usuario_tecnico.save()
         CuentaSistema.objects.update_or_create(
@@ -353,7 +355,7 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS(
-            'Demo multi-edificio lista. Cuentas: operador / apl2026 y tecnico / apl2026. '
+            'Demo multi-edificio lista. Cuentas: operador y tecnico; contraseñas no mostradas. '
             'Pellegrini entrada 199.1.1.0 / salida 10.0.0.31 | '
             'Oficinas entrada 10.0.0.20 / salida 10.0.0.21 | '
             'Depósito 10.0.0.40. '

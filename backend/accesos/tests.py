@@ -1,3 +1,4 @@
+from django.test import override_settings
 from datetime import date, datetime, time, timedelta
 from io import StringIO
 from zoneinfo import ZoneInfo
@@ -571,6 +572,7 @@ class TotemApiTests(TestCase):
         resultado = self.motor.evaluar(self.tag_res.codigo_referencia, '199.1.1.0', ahora=self.lunes_10)
         self.assertEqual(resultado.motivo, 'sujeto inactivo')
 
+    @override_settings(DEBUG=True)
     def test_seed_no_crea_ciclo_ni_reactiva_credenciales_existentes(self):
         call_command('seed_demo', stdout=StringIO())
         llave = Credencial.objects.get(codigo_referencia='TAG-PEL-01')
