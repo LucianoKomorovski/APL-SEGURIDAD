@@ -14,7 +14,11 @@ function cookie(nombre) {
 
 async function parseJson(res) {
   if (res.status === 204) return null;
-  const body = await res.json().catch(() => ({}));
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const body = isJson ? await res.json() : {};
+  if (!isJson) {
+    throw new Error('La API no respondió con JSON. Puede estar iniciándose; esperá un minuto y reintentá. Si persiste, revisá el proxy /api.');
+  }
   if (!res.ok) {
     const msg = body.error || body.detail || body.motivo || JSON.stringify(body);
     const error = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));

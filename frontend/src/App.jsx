@@ -33,8 +33,8 @@ const VISTAS_OPERADOR = [
 ];
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('operador');
-  const [password, setPassword] = useState('apl2026');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const enviar = async (e) => {
@@ -92,10 +92,11 @@ export default function App() {
   const logout = async () => {
     try {
       await api.post('/auth/logout/');
-    } finally {
       setUsuario(null);
       setEdificios([]);
       setEdificioId('');
+    } catch (err) {
+      window.alert(`No se pudo cerrar la sesión: ${err.message}`);
     }
   };
 
